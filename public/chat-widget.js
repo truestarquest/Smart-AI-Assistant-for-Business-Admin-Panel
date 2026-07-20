@@ -1,445 +1,220 @@
-'use strict';
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Aegis AI — Інтелект, що перетворює трафік на клієнтів" />
+  <title>Aegis AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&family=Unbounded:wght@500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="chat-widget.css" />
+</head>
+<body>
 
-const API_BASE   = '';
-const API_STATUS = `${API_BASE}/api/status`;
-const API_CHAT   = `${API_BASE}/api/chat`;
+  <!-- Background Glows -->
+  <div class="ambient-background">
+    <div class="ambient-orb ambient-orb--one"></div>
+    <div class="ambient-orb ambient-orb--two"></div>
+    <div class="ambient-orb ambient-orb--three"></div>
+    <div class="ambient-grain"></div>
+  </div>
 
-const fab           = document.getElementById('chat-fab');
-const widget        = document.getElementById('chat-widget');
-const closeBtn      = document.getElementById('chat-close-btn');
-const messagesEl    = document.getElementById('chat-messages');
-const inputEl       = document.getElementById('chat-input');
-const sendBtn       = document.getElementById('chat-send-btn');
-const suggestionsEl = document.getElementById('chat-suggestions');
-const statusDot     = document.querySelector('.chat-status .status-dot');
+  <!-- Header / Navigation -->
+  <header class="main-header">
+    <div class="logo">AEGIS AI</div>
+    <div class="lang-switcher" data-active="uk">
+      <span class="lang-slider" aria-hidden="true"></span>
+      <button class="lang-btn active" data-lang="uk">UA</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+  </header>
 
-let isOpen    = false;
-let isLoading = false;
-let sessionId = sessionStorage.getItem('chat_session_id') || null;
-let greeted   = false; // has the opening bot message been shown yet
+  <!-- 1. Hero Section -->
+  <main class="hero-container">
+    <div class="status-badge">• AEGIS AI — AUTOMATED BOOKING & LEAD CAPTURE</div>
+    <h1 class="hero-title" data-i18n="hero_title">Інтелект, що перетворює трафік на клієнтів.</h1>
+    <p class="hero-subtitle" data-i18n="hero_subtitle">Aegis — це не просто чат. Це автономна система, яка миттєво вступає в діалог, природно кваліфікує потреби відвідувачів, збирає контакти та бронює зустрічі. Поки ви відпочиваєте, Aegis працює на ваш бізнес.</p>
 
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    <div class="hero-actions">
+      <button class="btn-primary" id="integrate-btn" data-i18n="btn_primary">Інтегрувати Aegis</button>
+      <button class="btn-secondary" id="demo-cta-btn" data-i18n="btn_secondary">Дивитись демо</button>
+    </div>
+  </main>
 
-// =========================================================
-// i18n (Language Switcher) — Stage 11: animated pill
-// =========================================================
-const translations = {
-  uk: {
-    logo: "AEGIS AI",
-    badge: "• AEGIS AI — AUTOMATED BOOKING & LEAD CAPTURE",
-    hero_title: "Інтелект, що перетворює трафік на клієнтів.",
-    hero_subtitle: "Aegis — це не просто чат. Це автономна система, яка миттєво вступає в діалог, природно кваліфікує потреби відвідувачів, збирає контакти та бронює зустрічі. Поки ви відпочиваєте, Aegis працює на ваш бізнес.",
-    btn_primary: "Інтегрувати Aegis",
-    btn_secondary: "Дивитись демо",
+  <!-- 2. Features Grid -->
+  <section class="features-section">
+    <div class="features-grid">
+      <div class="feature-card glass-panel reveal">
+        <div class="feature-icon">📅</div>
+        <h3 class="feature-title" data-i18n="feature1_title">Автоматичне бронювання</h3>
+        <p class="feature-desc" data-i18n="feature1_desc">Інтелектуальний підбір слотів. Aegis аналізує ваш розклад, пропонує клієнту зручний час та автоматично фіксує запис без участі менеджера.</p>
+      </div>
+      <div class="feature-card glass-panel reveal">
+        <div class="feature-icon">🎯</div>
+        <h3 class="feature-title" data-i18n="feature2_title">Кваліфікація лідів</h3>
+        <p class="feature-desc" data-i18n="feature2_desc">Жодних "мертвих" діалогів. Бот майстерно та природно вплітає запитання в розмову, отримуючи ім'я, телефон/Telegram та суть задачі клієнта.</p>
+      </div>
+      <div class="feature-card glass-panel reveal">
+        <div class="feature-icon">🔒</div>
+        <h3 class="feature-title" data-i18n="feature3_title">Безпечна синхронізація</h3>
+        <p class="feature-desc" data-i18n="feature3_desc">One-Time Deep Links. Інноваційна технологія одноразових токенів для безшовного та захищеного перенесення розмови з вебсайту прямо в Telegram клієнта.</p>
+      </div>
+      <div class="feature-card glass-panel reveal">
+        <div class="feature-icon">⚡</div>
+        <h3 class="feature-title" data-i18n="feature4_title">Миттєвий сервіс</h3>
+        <p class="feature-desc" data-i18n="feature4_desc">Нуль очікувань. Блискавична реакція за 0.5 секунди в будь-який час доби. Ваші клієнти завжди отримують увагу першими.</p>
+      </div>
+    </div>
+  </section>
 
-    feature1_title: "Автоматичне бронювання",
-    feature1_desc: "Інтелектуальний підбір слотів. Aegis аналізує ваш розклад, пропонує клієнту зручний час та автоматично фіксує запис без участі менеджера.",
-    feature2_title: "Кваліфікація лідів",
-    feature2_desc: "Жодних \"мертвих\" діалогів. Бот майстерно та природно вплітає запитання в розмову, отримуючи ім'я, телефон/Telegram та суть задачі клієнта.",
-    feature3_title: "Безпечна синхронізація",
-    feature3_desc: "One-Time Deep Links. Інноваційна технологія одноразових токенів для безшовного та захищеного перенесення розмови з вебсайту прямо в Telegram клієнта.",
-    feature4_title: "Миттєвий сервіс",
-    feature4_desc: "Нуль очікувань. Блискавична реакція за 0.5 секунди в будь-який час доби. Ваші клієнти завжди отримують увагу першими.",
+  <!-- 3. How It Works -->
+  <section class="how-it-works">
+    <h2 class="section-title reveal" data-i18n="hiw_title">Автономність у 3 кроки.</h2>
+    <div class="steps-container">
+      <div class="step reveal">
+        <div class="step-number">01</div>
+        <h4 data-i18n="step1_title">Швидка інтеграція</h4>
+        <p data-i18n="step1_desc">Додайте один рядок коду на ваш сайт — і віджет із преміальним дизайном Glassmorphism готовий до роботи за 2 хвилини.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-number">02</div>
+        <h4 data-i18n="step2_title">Налаштування нейронів</h4>
+        <p data-i18n="step2_desc">Завантажте ваші прайси, FAQ або правила запису. Aegis швидко адаптується під специфіку та Tone of Voice вашого бізнесу.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-number">03</div>
+        <h4 data-i18n="step3_title">Перехоплення лідів</h4>
+        <p data-i18n="step3_desc">Aegis бере на себе всю рутину. Ви отримуєте "гарячі" ліди, готові контакти та записи прямо у вашу CRM чи закритий Telegram-канал.</p>
+      </div>
+    </div>
+  </section>
 
-    hiw_title: "Автономність у 3 кроки.",
-    step1_title: "Швидка інтеграція",
-    step1_desc: "Додайте один рядок коду на ваш сайт — і віджет із преміальним дизайном Glassmorphism готовий до роботи за 2 хвилини.",
-    step2_title: "Налаштування нейронів",
-    step2_desc: "Завантажте ваші прайси, FAQ або правила запису. Aegis швидко адаптується під специфіку та Tone of Voice вашого бізнесу.",
-    step3_title: "Перехоплення лідів",
-    step3_desc: "Aegis бере на себе всю рутину. Ви отримуєте \"гарячі\" ліди, готові контакти та записи прямо у вашу CRM чи закритий Telegram-канал.",
+  <!-- 4. Pricing Cards -->
+  <section class="pricing-section" id="pricing">
+    <h2 class="section-title reveal" data-i18n="pricing_title">Прозора архітектура цін.</h2>
+    <div class="pricing-grid">
+      <div class="pricing-card glass-panel reveal">
+        <h3 class="pricing-name">Starter</h3>
+        <div class="pricing-price">$29 <span data-i18n="mo">/ міс</span></div>
+        <ul class="pricing-features">
+          <li data-i18n="price_starter_f1">Базовий віджет для 1 сайту</li>
+          <li data-i18n="price_starter_f2">До 500 діалогів на місяць</li>
+          <li data-i18n="price_starter_f3">Стандартна база знань</li>
+          <li data-i18n="price_starter_f4">Email сповіщення про лідів</li>
+        </ul>
+      </div>
+      <div class="pricing-card glass-panel highlighted reveal" id="pro-card">
+        <div class="pricing-badge" data-i18n="pricing_pro_badge">Рекомендований</div>
+        <h3 class="pricing-name">Pro</h3>
+        <div class="pricing-price">$79 <span data-i18n="mo">/ міс</span></div>
+        <ul class="pricing-features">
+          <li data-i18n="price_pro_f1">Сайт + інтеграція з Telegram-ботом</li>
+          <li data-i18n="price_pro_f2">Необмежені діалоги</li>
+          <li data-i18n="price_pro_f3">Авто-синхронізація (One-Time Deep Links)</li>
+          <li data-i18n="price_pro_f4">Пряма CRM-інтеграція та Webhooks</li>
+        </ul>
+      </div>
+      <div class="pricing-card glass-panel reveal">
+        <h3 class="pricing-name">Enterprise</h3>
+        <div class="pricing-price" data-i18n="custom">Custom</div>
+        <ul class="pricing-features">
+          <li data-i18n="price_ent_f1">Виділений сервер (Dedicated Instance)</li>
+          <li data-i18n="price_ent_f2">Індивідуальні складні сценарії</li>
+          <li data-i18n="price_ent_f3">Повний аудит безпеки</li>
+          <li data-i18n="price_ent_f4">Персональний менеджер 24/7</li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
-    pricing_title: "Прозора архітектура цін.",
-    mo: "/ міс",
-    pricing_pro_badge: "Рекомендований",
-    custom: "Custom",
-    price_starter_f1: "Базовий віджет для 1 сайту",
-    price_starter_f2: "До 500 діалогів на місяць",
-    price_starter_f3: "Стандартна база знань",
-    price_starter_f4: "Email сповіщення про лідів",
-    price_pro_f1: "Сайт + інтеграція з Telegram-ботом",
-    price_pro_f2: "Необмежені діалоги",
-    price_pro_f3: "Авто-синхронізація (One-Time Deep Links)",
-    price_pro_f4: "Пряма CRM-інтеграція та Webhooks",
-    price_ent_f1: "Виділений сервер (Dedicated Instance)",
-    price_ent_f2: "Індивідуальні складні сценарії",
-    price_ent_f3: "Повний аудит безпеки",
-    price_ent_f4: "Персональний менеджер 24/7",
+  <!-- 5. Testimonials -->
+  <section class="testimonials-section">
+    <h2 class="section-title reveal" data-i18n="testi_title">Системи перевірені в бойових умовах.</h2>
+    <div class="testi-grid">
+      <div class="testi-card glass-panel reveal">
+        <p class="testi-text" data-i18n="testi_1_text">"Aegis повністю закрив нам питання з нічними клієнтами. 30% запитів прилітає після опівночі. Бот сам кваліфікує ліда, бере номер і записує в CRM. Зранку менеджери просто дзвонять гарячим клієнтам."</p>
+        <div class="testi-author" data-i18n="testi_1_author">— Олександр, Власник AutoParts UA</div>
+      </div>
+      <div class="testi-card glass-panel reveal">
+        <p class="testi-text" data-i18n="testi_2_text">"Інтеграція справді зайняла 2 хвилини. Найбільше вразило те, як бот переводить клієнта в Telegram (One-Time Links) — жодних втрат контактів, навіть якщо людина закрила вкладку браузера."</p>
+        <div class="testi-author" data-i18n="testi_2_author">— Марина, СЕО BeautyHub</div>
+      </div>
+    </div>
+  </section>
 
-    testi_title: "Системи перевірені в бойових умовах.",
-    testi_1_text: "\"Aegis повністю закрив нам питання з нічними клієнтами. 30% запитів прилітає після опівночі. Бот сам кваліфікує ліда, бере номер і записує в CRM. Зранку менеджери просто дзвонять гарячим клієнтам.\"",
-    testi_1_author: "— Олександр, Власник AutoParts UA",
-    testi_2_text: "\"Інтеграція справді зайняла 2 хвилини. Найбільше вразило те, як бот переводить клієнта в Telegram (One-Time Links) — жодних втрат контактів, навіть якщо людина закрила вкладку браузера.\"",
-    testi_2_author: "— Марина, СЕО BeautyHub",
+  <!-- 6. FAQ -->
+  <section class="faq-section">
+    <h2 class="section-title reveal" data-i18n="faq_title">Декодування невідомого.</h2>
+    <div class="faq-list">
+      <div class="faq-item glass-panel reveal">
+        <h4 data-i18n="faq_1_q">Q: Чи потрібні навички програмування для налаштування?</h4>
+        <p data-i18n="faq_1_a">A: Жодних. Ви просто додаєте скрипт на сайт, а базу знань (FAQ, прайси) заповнюєте звичайним текстом у зручній адмін-панелі.</p>
+      </div>
+      <div class="faq-item glass-panel reveal">
+        <h4 data-i18n="faq_2_q">Q: Чи розуміє Aegis сленг та помилки в тексті?</h4>
+        <p data-i18n="faq_2_a">A: Так. Нейромережа розпізнає контекст, ігнорує граматичні помилки та може спілкуватися як діловою мовою, так і більш вільно, дзеркалячи емоції вашого клієнта.</p>
+      </div>
+      <div class="faq-item glass-panel reveal">
+        <h4 data-i18n="faq_3_q">Q: Що відбувається, якщо бот не знає відповіді?</h4>
+        <p data-i18n="faq_3_a">A: Бот має вбудований запобіжник (Failsafe). Він ввічливо повідомить, що це питання краще обговорити зі спеціалістом, візьме контакти і миттєво відправить сповіщення вам у Telegram.</p>
+      </div>
+    </div>
+  </section>
 
-    faq_title: "Декодування невідомого.",
-    faq_1_q: "Q: Чи потрібні навички програмування для налаштування?",
-    faq_1_a: "A: Жодних. Ви просто додаєте скрипт на сайт, а базу знань (FAQ, прайси) заповнюєте звичайним текстом у зручній адмін-панелі.",
-    faq_2_q: "Q: Чи розуміє Aegis сленг та помилки в тексті?",
-    faq_2_a: "A: Так. Нейромережа розпізнає контекст, ігнорує граматичні помилки та може спілкуватися як діловою мовою, так і більш вільно, дзеркалячи емоції вашого клієнта.",
-    faq_3_q: "Q: Що відбувається, якщо бот не знає відповіді?",
-    faq_3_a: "A: Бот має вбудований запобіжник (Failsafe). Він ввічливо повідомить, що це питання краще обговорити зі спеціалістом, візьме контакти і миттєво відправить сповіщення вам у Telegram.",
+  <!-- 7. Footer -->
+  <footer class="main-footer">
+    <div class="footer-slogan" data-i18n="footer_slogan">AEGIS AI. Цифровий інтелект на варті вашого бізнесу.</div>
+    <div class="footer-status">
+      <span class="status-dot online pulse"></span>
+      <span data-i18n="footer_status">All Systems Operational</span>
+    </div>
+    <div class="footer-copy" data-i18n="footer_copy">© 2026 Aegis Systems. Всі права захищено.</div>
+  </footer>
 
-    footer_slogan: "AEGIS AI. Цифровий інтелект на варті вашого бізнесу.",
-    footer_status: "All Systems Operational",
-    footer_copy: "© 2026 Aegis Systems. Всі права захищено.",
+  <!-- Chat Widget -->
+  <button id="chat-fab" class="chat-fab" aria-label="Відкрити чат">
+    <span class="fab-ring" aria-hidden="true"></span>
+    <span class="fab-icon fab-icon--open">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    </span>
+    <span class="fab-icon fab-icon--close">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </span>
+  </button>
 
-    chat_greeting: "Вітаю! Я Aegis AI. Чим можу допомогти?",
-    demo_greeting: "Це демо-режим 👋 Спробуйте запитати мене про тарифи, інтеграцію або можливості Aegis — я відповім так само, як відповідав би реальному клієнту."
-  },
-  en: {
-    logo: "AEGIS AI",
-    badge: "• AEGIS AI — AUTOMATED BOOKING & LEAD CAPTURE",
-    hero_title: "Intelligence that turns traffic into clients.",
-    hero_subtitle: "Aegis is more than a chat widget. It’s an autonomous system that engages visitors instantly, naturally qualifies their needs, captures contact info, and books appointments. While you rest, Aegis works for your business.",
-    btn_primary: "Integrate Aegis",
-    btn_secondary: "Watch Demo",
+  <aside id="chat-widget" class="chat-widget glass-panel">
+    <div class="chat-widget-glow" aria-hidden="true"></div>
+    <header class="chat-header">
+      <div class="chat-header-info">
+        <div class="chat-avatar">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        </div>
+        <div>
+          <div class="chat-name">Aegis AI</div>
+          <div class="chat-status"><span class="status-dot online"></span> Online</div>
+        </div>
+      </div>
+      <button id="chat-close-btn" class="chat-close-btn" aria-label="Закрити чат">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </header>
 
-    feature1_title: "Automated Booking",
-    feature1_desc: "Intelligent slot matching. Aegis analyzes your schedule, proposes convenient times, and securely registers the appointment without human intervention.",
-    feature2_title: "Lead Qualification",
-    feature2_desc: "No more dead-end chats. The bot naturally weaves questions into the conversation, effortlessly capturing names, contact details, and project specifics.",
-    feature3_title: "Secure Synchronization",
-    feature3_desc: "One-Time Deep Links. Innovative single-use token technology for a seamless and secure transition from web chat directly to the user's Telegram.",
-    feature4_title: "Instant Service",
-    feature4_desc: "Zero wait time. Lightning-fast 0.5-second reaction speed, 24/7. Your clients always receive priority attention.",
+    <div class="chat-messages" id="chat-messages"></div>
 
-    hiw_title: "Autonomy in 3 Steps.",
-    step1_title: "Rapid Integration",
-    step1_desc: "Embed a single line of code on your site, and the premium Glassmorphism widget is live in under 2 minutes.",
-    step2_title: "Neural Setup",
-    step2_desc: "Upload your pricing, FAQs, or booking rules. Aegis quickly adapts to your business logic and Tone of Voice.",
-    step3_title: "Lead Interception",
-    step3_desc: "Aegis handles the routine. You receive red-hot leads, captured contacts, and booked appointments straight to your CRM or private Telegram channel.",
+    <div class="chat-suggestions" id="chat-suggestions">
+      <button class="suggestion-chip" data-text="Скільки коштує Pro тариф?">Скільки коштує Pro?</button>
+      <button class="suggestion-chip" data-text="Як відбувається інтеграція з сайтом?">Як інтегрувати?</button>
+    </div>
 
-    pricing_title: "Transparent Pricing Architecture.",
-    mo: "/ mo",
-    pricing_pro_badge: "Recommended",
-    custom: "Custom",
-    price_starter_f1: "Base widget for 1 website",
-    price_starter_f2: "Up to 500 conversations/month",
-    price_starter_f3: "Standard knowledge base",
-    price_starter_f4: "Email lead notifications",
-    price_pro_f1: "Website + Telegram Bot integration",
-    price_pro_f2: "Unlimited conversations",
-    price_pro_f3: "Chat auto-sync (One-Time Deep Links)",
-    price_pro_f4: "Direct CRM integration & Webhooks",
-    price_ent_f1: "Dedicated server instance",
-    price_ent_f2: "Custom complex scenarios",
-    price_ent_f3: "Full security audit",
-    price_ent_f4: "Dedicated account manager 24/7",
+    <footer class="chat-input-area">
+      <textarea id="chat-input" class="chat-input" rows="1" placeholder="Напишіть повідомлення..."></textarea>
+      <button id="chat-send-btn" class="chat-send-btn" disabled aria-label="Надіслати">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      </button>
+    </footer>
+  </aside>
 
-    testi_title: "Systems tested in combat conditions.",
-    testi_1_text: "\"Aegis completely solved our after-hours support. 30% of inquiries hit after midnight. The bot qualifies the lead, takes the number, and logs it into our CRM. In the morning, our reps just call hot leads.\"",
-    testi_1_author: "— Alexander, Owner of AutoParts UA",
-    testi_2_text: "\"Integration really took 2 minutes. The most impressive part is how the bot transitions the client to Telegram via One-Time Links — zero lost contacts even if the user closes the browser tab.\"",
-    testi_2_author: "— Marina, CEO of BeautyHub",
-
-    faq_title: "Decoding the Unknown.",
-    faq_1_q: "Q: Do I need coding skills to set this up?",
-    faq_1_a: "A: None at all. You simply paste a script onto your site and fill the knowledge base with plain text via a user-friendly admin panel.",
-    faq_2_q: "Q: Does Aegis understand slang and typos?",
-    faq_2_a: "A: Yes. The neural network recognizes context, ignores grammatical errors, and adapts its Tone of Voice to emotionally mirror your client perfectly.",
-    faq_3_q: "Q: What happens if the bot doesn't know the answer?",
-    faq_3_a: "A: The bot has a built-in failsafe protocol. It will politely inform the user that a human specialist is better suited for this specific question, capture their contact details, and ping you directly on Telegram.",
-
-    footer_slogan: "AEGIS AI. Digital intelligence guarding your business.",
-    footer_status: "All Systems Operational",
-    footer_copy: "© 2026 Aegis Systems. All rights reserved.",
-
-    chat_greeting: "Hi! I'm Aegis AI. How can I help?",
-    demo_greeting: "This is demo mode 👋 Try asking about pricing, integration, or what Aegis can do — I'll answer just like I would for a real client."
-  }
-};
-
-let currentLang = 'uk';
-
-// Stage 12: Hologram Dissolve transition.
-// Sequence: (1) quick glitch-out — opacity down, subtle horizontal shift,
-// fast easing, ~180ms; (2) swap textContent while invisible;
-// (3) glitch-in — fade/slide back using the slow luxe cubic-bezier
-// defined in CSS ([data-i18n] base transition).
-// IMPORTANT: this only ever touches inline `style` (opacity/transform)
-// on [data-i18n] elements — it never reads or writes `classList`, so it
-// can never strip `.is-visible` from `.reveal` sections. Section
-// visibility and language are fully independent state.
-const GLITCH_OUT_MS = 180;
-
-function applyLang(lang) {
-  currentLang = lang;
-  const elements = document.querySelectorAll('[data-i18n]');
-
-  if (prefersReducedMotion) {
-    elements.forEach((el) => {
-      const key = el.getAttribute('data-i18n');
-      if (translations[lang][key]) el.textContent = translations[lang][key];
-    });
-    return;
-  }
-
-  elements.forEach((el) => {
-    el.style.transition = `opacity ${GLITCH_OUT_MS}ms ease, transform ${GLITCH_OUT_MS}ms ease`;
-    el.style.opacity = '0.15';
-    el.style.transform = 'translateX(-3px) skewX(-1deg)';
-  });
-
-  setTimeout(() => {
-    elements.forEach((el) => {
-      const key = el.getAttribute('data-i18n');
-      if (translations[lang][key]) el.textContent = translations[lang][key];
-      // Hand back to the slow luxe easing declared in CSS for the settle-in.
-      el.style.transition = '';
-      el.style.opacity = '1';
-      el.style.transform = 'translateX(0) skewX(0deg)';
-    });
-  }, GLITCH_OUT_MS);
-}
-
-const langSwitcher = document.querySelector('.lang-switcher');
-const langBtns = document.querySelectorAll('.lang-btn');
-langBtns.forEach((btn) => {
-  btn.addEventListener('click', (e) => {
-    langBtns.forEach((b) => b.classList.remove('active'));
-    e.target.classList.add('active');
-    const lang = e.target.getAttribute('data-lang');
-    if (langSwitcher) langSwitcher.setAttribute('data-active', lang);
-    applyLang(lang);
-  });
-});
-
-// Apply default language immediately — previously this only ran on click,
-// so the page showed raw fallback text until the user touched the switcher.
-// Skip the transition on first load (nothing to dissolve from/to yet).
-(function initialApplyLang() {
-  document.querySelectorAll('[data-i18n]').forEach((el) => {
-    const key = el.getAttribute('data-i18n');
-    if (translations.uk[key]) el.textContent = translations.uk[key];
-  });
-})();
-
-// =========================================================
-// Stage 11: Smooth scroll to #pricing + Pro card pulse
-// =========================================================
-const integrateBtn = document.getElementById('integrate-btn');
-const proCard = document.getElementById('pro-card');
-
-// Stage 12: pulse animation is now 1.25s x 2 iterations = 2.5s total
-// (was 1s x 3 = 3s) — timeout below matches the new duration plus a
-// small buffer so the class is removed right as the animation ends.
-function pulseProCard() {
-  if (!proCard) return;
-  proCard.classList.remove('pulse-highlight');
-  // force reflow so the animation can restart if triggered again
-  void proCard.offsetWidth;
-  proCard.classList.add('pulse-highlight');
-  setTimeout(() => proCard.classList.remove('pulse-highlight'), 2600);
-}
-
-if (integrateBtn) {
-  integrateBtn.addEventListener('click', () => {
-    const pricingSection = document.getElementById('pricing');
-    if (!pricingSection) return;
-    pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setTimeout(pulseProCard, 650);
-  });
-}
-
-// =========================================================
-// Stage 11: Scroll Reveal via IntersectionObserver
-// Only ever ADDS .is-visible, and only once per element (unobserve
-// right after). Nothing else in this file touches this class, so
-// language switching, chat open/close, etc. can never undo a reveal.
-// =========================================================
-const revealTargets = document.querySelectorAll('.reveal');
-if ('IntersectionObserver' in window && revealTargets.length) {
-  const revealObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible');
-          revealObserver.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
-  );
-  revealTargets.forEach((el) => revealObserver.observe(el));
-} else {
-  revealTargets.forEach((el) => el.classList.add('is-visible'));
-}
-
-// =========================================================
-// Chat Logic
-// =========================================================
-function formatTime(date = new Date()) {
-  return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-}
-
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-// Escape everything first, then selectively re-open only a whitelist of
-// simple tags with no attributes. This is safe against prompt-injected HTML
-// from the model, unlike a raw innerHTML pass-through would be.
-function sanitizeBotHtml(str) {
-  const escaped = escapeHtml(str);
-  return escaped.replace(/&lt;(\/?)(b|i|code|pre)&gt;/gi, '<$1$2>');
-}
-
-function scrollToBottom(smooth = true) {
-  messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
-}
-
-function addMessage(role, text, isTyping = false) {
-  const msg = document.createElement('div');
-  msg.className = `message message--${role}`;
-
-  const avatar = document.createElement('div');
-  avatar.className = 'message-avatar';
-  avatar.textContent = role === 'bot' ? '🤖' : '👤';
-
-  const bubble = document.createElement('div');
-  bubble.className = 'message-bubble';
-
-  if (isTyping) {
-    bubble.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
-  } else {
-    const content = role === 'bot' ? sanitizeBotHtml(text) : escapeHtml(text);
-    bubble.innerHTML = `<span>${content}</span><div class="message-time">${formatTime()}</div>`;
-  }
-
-  msg.appendChild(avatar);
-  msg.appendChild(bubble);
-  messagesEl.appendChild(msg);
-  scrollToBottom();
-  return msg;
-}
-
-function ensureGreeting() {
-  if (greeted) return;
-  greeted = true;
-  addMessage('bot', translations[currentLang].chat_greeting);
-}
-
-function openChat() {
-  isOpen = true;
-  widget.classList.add('is-open');
-  fab.classList.add('is-open');
-  ensureGreeting();
-  setTimeout(() => inputEl.focus(), 300);
-  scrollToBottom(false);
-}
-
-function closeChat() {
-  isOpen = false;
-  widget.classList.remove('is-open');
-  fab.classList.remove('is-open');
-  fab.focus();
-}
-
-function toggleChat() { isOpen ? closeChat() : openChat(); }
-
-// Stage 11: "Дивитись демо" — opens the widget and simulates a live demo
-// message instead of just greeting the user like a normal open.
-function startDemo() {
-  openChat();
-  setTimeout(() => {
-    addMessage('bot', translations[currentLang].demo_greeting);
-  }, 500);
-}
-
-async function sendMessage() {
-  const text = inputEl.value.trim();
-  if (!text || isLoading) return;
-
-  if (suggestionsEl) suggestionsEl.style.display = 'none';
-
-  addMessage('user', text);
-  inputEl.value = '';
-  inputEl.style.height = 'auto';
-  sendBtn.disabled = true;
-  isLoading = true;
-
-  const typingMsg = addMessage('bot', '', true);
-
-  try {
-    const response = await fetch(API_CHAT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, sessionId }),
-    });
-
-    typingMsg.remove();
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-    const data = await response.json();
-    if (data.sessionId) {
-      sessionId = data.sessionId;
-      sessionStorage.setItem('chat_session_id', sessionId);
-    }
-
-    const reply = data.reply || data.message || 'Відповідь отримана.';
-    addMessage('bot', reply);
-
-  } catch (err) {
-    typingMsg.remove();
-    addMessage('bot', 'Помилка підключення до сервера. Спробуйте пізніше.');
-  } finally {
-    isLoading = false;
-    sendBtn.disabled = !inputEl.value.trim();
-    inputEl.focus();
-  }
-}
-
-function autoResize() {
-  inputEl.style.height = 'auto';
-  inputEl.style.height = Math.min(inputEl.scrollHeight, 110) + 'px';
-  sendBtn.disabled = !inputEl.value.trim();
-}
-
-function handleSuggestion(e) {
-  const chip = e.target.closest('.suggestion-chip');
-  if (!chip) return;
-  inputEl.value = chip.dataset.text;
-  autoResize();
-  sendMessage();
-}
-
-async function checkServerStatus() {
-  if (!statusDot) return;
-  try {
-    const res = await fetch(API_STATUS);
-    const data = await res.json();
-    statusDot.className = data.success ? 'status-dot online pulse' : 'status-dot offline';
-  } catch {
-    statusDot.className = 'status-dot offline';
-  }
-}
-
-fab.addEventListener('click', toggleChat);
-closeBtn.addEventListener('click', closeChat);
-inputEl.addEventListener('input', autoResize);
-inputEl.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-});
-sendBtn.addEventListener('click', sendMessage);
-if (suggestionsEl) suggestionsEl.addEventListener('click', handleSuggestion);
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen) closeChat(); });
-document.addEventListener('click', (e) => {
-  if (isOpen && !widget.contains(e.target) && !fab.contains(e.target)) closeChat();
-});
-
-// CTA buttons
-const demoBtn = document.getElementById('demo-cta-btn');
-if (demoBtn) demoBtn.addEventListener('click', startDemo);
-
-(function init() {
-  checkServerStatus();
-  setInterval(checkServerStatus, 30_000);
-})();
+  <script src="chat-widget.js"></script>
+</body>
+</html>
