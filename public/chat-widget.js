@@ -18,6 +18,8 @@ let isLoading = false;
 let sessionId = sessionStorage.getItem('chat_session_id') || null;
 let greeted   = false; // has the opening bot message been shown yet
 
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 // =========================================================
 // i18n (Language Switcher) — Stage 11: animated pill
 // =========================================================
@@ -152,12 +154,45 @@ const translations = {
 
 let currentLang = 'uk';
 
+// Stage 12: Hologram Dissolve transition.
+// Sequence: (1) quick glitch-out — opacity down, subtle horizontal shift,
+// fast easing, ~180ms; (2) swap textContent while invisible;
+// (3) glitch-in — fade/slide back using the slow luxe cubic-bezier
+// defined in CSS ([data-i18n] base transition).
+// IMPORTANT: this only ever touches inline `style` (opacity/transform)
+// on [data-i18n] elements — it never reads or writes `classList`, so it
+// can never strip `.is-visible` from `.reveal` sections. Section
+// visibility and language are fully independent state.
+const GLITCH_OUT_MS = 180;
+
 function applyLang(lang) {
   currentLang = lang;
-  document.querySelectorAll('[data-i18n]').forEach((el) => {
-    const key = el.getAttribute('data-i18n');
-    if (translations[lang][key]) el.textContent = translations[lang][key];
+  const elements = document.querySelectorAll('[data-i18n]');
+
+  if (prefersReducedMotion) {
+    elements.forEach((el) => {
+      const key = el.getAttribute('data-i18n');
+      if (translations[lang][key]) el.textContent = translations[lang][key];
+    });
+    return;
+  }
+
+  elements.forEach((el) => {
+    el.style.transition = `opacity ${GLITCH_OUT_MS}ms ease, transform ${GLITCH_OUT_MS}ms ease`;
+    el.style.opacity = '0.15';
+    el.style.transform = 'translateX(-3px) skewX(-1deg)';
   });
+
+  setTimeout(() => {
+    elements.forEach((el) => {
+      const key = el.getAttribute('data-i18n');
+      if (translations[lang][key]) el.textContent = translations[lang][key];
+      // Hand back to the slow luxe easing declared in CSS for the settle-in.
+      el.style.transition = '';
+      el.style.opacity = '1';
+      el.style.transform = 'translateX(0) skewX(0deg)';
+    });
+  }, GLITCH_OUT_MS);
 }
 
 const langSwitcher = document.querySelector('.lang-switcher');
@@ -174,7 +209,13 @@ langBtns.forEach((btn) => {
 
 // Apply default language immediately — previously this only ran on click,
 // so the page showed raw fallback text until the user touched the switcher.
-applyLang('uk');
+// Skip the transition on first load (nothing to dissolve from/to yet).
+(function initialApplyLang() {
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.getAttribute('data-i18n');
+    if (translations.uk[key]) el.textContent = translations.uk[key];
+  });
+})();
 
 // =========================================================
 // Stage 11: Smooth scroll to #pricing + Pro card pulse
@@ -182,13 +223,16 @@ applyLang('uk');
 const integrateBtn = document.getElementById('integrate-btn');
 const proCard = document.getElementById('pro-card');
 
+// Stage 12: pulse animation is now 1.25s x 2 iterations = 2.5s total
+// (was 1s x 3 = 3s) — timeout below matches the new duration plus a
+// small buffer so the class is removed right as the animation ends.
 function pulseProCard() {
   if (!proCard) return;
   proCard.classList.remove('pulse-highlight');
   // force reflow so the animation can restart if triggered again
   void proCard.offsetWidth;
   proCard.classList.add('pulse-highlight');
-  setTimeout(() => proCard.classList.remove('pulse-highlight'), 3200);
+  setTimeout(() => proCard.classList.remove('pulse-highlight'), 2600);
 }
 
 if (integrateBtn) {
@@ -202,6 +246,9 @@ if (integrateBtn) {
 
 // =========================================================
 // Stage 11: Scroll Reveal via IntersectionObserver
+// Only ever ADDS .is-visible, and only once per element (unobserve
+// right after). Nothing else in this file touches this class, so
+// language switching, chat open/close, etc. can never undo a reveal.
 // =========================================================
 const revealTargets = document.querySelectorAll('.reveal');
 if ('IntersectionObserver' in window && revealTargets.length) {
