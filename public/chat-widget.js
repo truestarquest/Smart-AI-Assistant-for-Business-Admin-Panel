@@ -1,9 +1,8 @@
-﻿'use strict';
+'use strict';
 
 const API_BASE   = '';
-const API_STATUS = \/api/status;
-const API_CHAT   = \/api/chat;
-const BOT_NAME   = 'AI Асистент';
+const API_STATUS = `${API_BASE}/api/status`;
+const API_CHAT   = `${API_BASE}/api/chat`;
 
 const fab           = document.getElementById('chat-fab');
 const widget        = document.getElementById('chat-widget');
@@ -13,14 +12,14 @@ const inputEl       = document.getElementById('chat-input');
 const sendBtn       = document.getElementById('chat-send-btn');
 const suggestionsEl = document.getElementById('chat-suggestions');
 const statusDot     = document.querySelector('.chat-status .status-dot');
-const statusText    = document.querySelector('.chat-status');
 
-let isOpen      = false;
-let isLoading   = false;
-let sessionId   = sessionStorage.getItem('chat_session_id') || null;
+let isOpen    = false;
+let isLoading = false;
+let sessionId = sessionStorage.getItem('chat_session_id') || null;
+let greeted   = false; // has the opening bot message been shown yet
 
 // =========================================================
-// i18n (Language Switcher)
+// i18n (Language Switcher) — Stage 11: animated pill
 // =========================================================
 const translations = {
   uk: {
@@ -30,7 +29,7 @@ const translations = {
     hero_subtitle: "Aegis — це не просто чат. Це автономна система, яка миттєво вступає в діалог, природно кваліфікує потреби відвідувачів, збирає контакти та бронює зустрічі. Поки ви відпочиваєте, Aegis працює на ваш бізнес.",
     btn_primary: "Інтегрувати Aegis",
     btn_secondary: "Дивитись демо",
-    
+
     feature1_title: "Автоматичне бронювання",
     feature1_desc: "Інтелектуальний підбір слотів. Aegis аналізує ваш розклад, пропонує клієнту зручний час та автоматично фіксує запис без участі менеджера.",
     feature2_title: "Кваліфікація лідів",
@@ -81,7 +80,10 @@ const translations = {
 
     footer_slogan: "AEGIS AI. Цифровий інтелект на варті вашого бізнесу.",
     footer_status: "All Systems Operational",
-    footer_copy: "© 2026 Aegis Systems. Всі права захищено."
+    footer_copy: "© 2026 Aegis Systems. Всі права захищено.",
+
+    chat_greeting: "Вітаю! Я Aegis AI. Чим можу допомогти?",
+    demo_greeting: "Це демо-режим 👋 Спробуйте запитати мене про тарифи, інтеграцію або можливості Aegis — я відповім так само, як відповідав би реальному клієнту."
   },
   en: {
     logo: "AEGIS AI",
@@ -90,7 +92,7 @@ const translations = {
     hero_subtitle: "Aegis is more than a chat widget. It’s an autonomous system that engages visitors instantly, naturally qualifies their needs, captures contact info, and books appointments. While you rest, Aegis works for your business.",
     btn_primary: "Integrate Aegis",
     btn_secondary: "Watch Demo",
-    
+
     feature1_title: "Automated Booking",
     feature1_desc: "Intelligent slot matching. Aegis analyzes your schedule, proposes convenient times, and securely registers the appointment without human intervention.",
     feature2_title: "Lead Qualification",
@@ -141,32 +143,83 @@ const translations = {
 
     footer_slogan: "AEGIS AI. Digital intelligence guarding your business.",
     footer_status: "All Systems Operational",
-    footer_copy: "© 2026 Aegis Systems. All rights reserved."
+    footer_copy: "© 2026 Aegis Systems. All rights reserved.",
+
+    chat_greeting: "Hi! I'm Aegis AI. How can I help?",
+    demo_greeting: "This is demo mode 👋 Try asking about pricing, integration, or what Aegis can do — I'll answer just like I would for a real client."
   }
 };
 
+let currentLang = 'uk';
+
+function applyLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[lang][key]) el.textContent = translations[lang][key];
+  });
+}
+
+const langSwitcher = document.querySelector('.lang-switcher');
 const langBtns = document.querySelectorAll('.lang-btn');
-langBtns.forEach(btn => {
+langBtns.forEach((btn) => {
   btn.addEventListener('click', (e) => {
-    langBtns.forEach(b => b.classList.remove('active'));
+    langBtns.forEach((b) => b.classList.remove('active'));
     e.target.classList.add('active');
     const lang = e.target.getAttribute('data-lang');
-    
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.getAttribute('data-i18n');
-      if (translations[lang][key]) {
-        el.textContent = translations[lang][key];
-      }
-    });
+    if (langSwitcher) langSwitcher.setAttribute('data-active', lang);
+    applyLang(lang);
   });
 });
 
-// CTA Buttons connect to chat
-const demoBtn = document.getElementById('demo-cta-btn');
-const integrateBtn = document.getElementById('integrate-btn');
-if(demoBtn) demoBtn.addEventListener('click', openChat);
-if(integrateBtn) integrateBtn.addEventListener('click', openChat);
+// Apply default language immediately — previously this only ran on click,
+// so the page showed raw fallback text until the user touched the switcher.
+applyLang('uk');
 
+// =========================================================
+// Stage 11: Smooth scroll to #pricing + Pro card pulse
+// =========================================================
+const integrateBtn = document.getElementById('integrate-btn');
+const proCard = document.getElementById('pro-card');
+
+function pulseProCard() {
+  if (!proCard) return;
+  proCard.classList.remove('pulse-highlight');
+  // force reflow so the animation can restart if triggered again
+  void proCard.offsetWidth;
+  proCard.classList.add('pulse-highlight');
+  setTimeout(() => proCard.classList.remove('pulse-highlight'), 3200);
+}
+
+if (integrateBtn) {
+  integrateBtn.addEventListener('click', () => {
+    const pricingSection = document.getElementById('pricing');
+    if (!pricingSection) return;
+    pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(pulseProCard, 650);
+  });
+}
+
+// =========================================================
+// Stage 11: Scroll Reveal via IntersectionObserver
+// =========================================================
+const revealTargets = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && revealTargets.length) {
+  const revealObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+  );
+  revealTargets.forEach((el) => revealObserver.observe(el));
+} else {
+  revealTargets.forEach((el) => el.classList.add('is-visible'));
+}
 
 // =========================================================
 // Chat Logic
@@ -176,22 +229,62 @@ function formatTime(date = new Date()) {
 }
 
 function escapeHtml(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
+// Escape everything first, then selectively re-open only a whitelist of
+// simple tags with no attributes. This is safe against prompt-injected HTML
+// from the model, unlike a raw innerHTML pass-through would be.
 function sanitizeBotHtml(str) {
   const escaped = escapeHtml(str);
-  return escaped.replace(/&lt;(\/?)(b|i|code|pre)&gt;/gi, '<\\>');
+  return escaped.replace(/&lt;(\/?)(b|i|code|pre)&gt;/gi, '<$1$2>');
 }
 
 function scrollToBottom(smooth = true) {
   messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
 }
 
+function addMessage(role, text, isTyping = false) {
+  const msg = document.createElement('div');
+  msg.className = `message message--${role}`;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'message-avatar';
+  avatar.textContent = role === 'bot' ? '🤖' : '👤';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'message-bubble';
+
+  if (isTyping) {
+    bubble.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
+  } else {
+    const content = role === 'bot' ? sanitizeBotHtml(text) : escapeHtml(text);
+    bubble.innerHTML = `<span>${content}</span><div class="message-time">${formatTime()}</div>`;
+  }
+
+  msg.appendChild(avatar);
+  msg.appendChild(bubble);
+  messagesEl.appendChild(msg);
+  scrollToBottom();
+  return msg;
+}
+
+function ensureGreeting() {
+  if (greeted) return;
+  greeted = true;
+  addMessage('bot', translations[currentLang].chat_greeting);
+}
+
 function openChat() {
   isOpen = true;
   widget.classList.add('is-open');
   fab.classList.add('is-open');
+  ensureGreeting();
   setTimeout(() => inputEl.focus(), 300);
   scrollToBottom(false);
 }
@@ -205,27 +298,13 @@ function closeChat() {
 
 function toggleChat() { isOpen ? closeChat() : openChat(); }
 
-function addMessage(role, text, isTyping = false) {
-  const msg = document.createElement('div');
-  msg.className = message message--\;
-  const avatar = document.createElement('div');
-  avatar.className = 'message-avatar';
-  avatar.textContent = role === 'bot' ? '🤖' : '👤';
-  const bubble = document.createElement('div');
-  bubble.className = 'message-bubble';
-
-  if (isTyping) {
-    bubble.innerHTML = <div class="typing-dots"><span></span><span></span><span></span></div>;
-  } else {
-    const content = role === 'bot' ? sanitizeBotHtml(text) : escapeHtml(text);
-    bubble.innerHTML = <span>\</span><div class="message-time">\</div>;
-  }
-
-  msg.appendChild(avatar);
-  msg.appendChild(bubble);
-  messagesEl.appendChild(msg);
-  scrollToBottom();
-  return msg;
+// Stage 11: "Дивитись демо" — opens the widget and simulates a live demo
+// message instead of just greeting the user like a normal open.
+function startDemo() {
+  openChat();
+  setTimeout(() => {
+    addMessage('bot', translations[currentLang].demo_greeting);
+  }, 500);
 }
 
 async function sendMessage() {
@@ -250,7 +329,7 @@ async function sendMessage() {
     });
 
     typingMsg.remove();
-    if (!response.ok) throw new Error(HTTP \);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const data = await response.json();
     if (data.sessionId) {
@@ -286,15 +365,13 @@ function handleSuggestion(e) {
 }
 
 async function checkServerStatus() {
-  if (!statusText) return;
+  if (!statusDot) return;
   try {
-    const res  = await fetch(API_STATUS);
+    const res = await fetch(API_STATUS);
     const data = await res.json();
-    if (data.success) {
-      if(statusDot) statusDot.className = 'status-dot online pulse';
-    }
+    statusDot.className = data.success ? 'status-dot online pulse' : 'status-dot offline';
   } catch {
-    if(statusDot) statusDot.className = 'status-dot offline';
+    statusDot.className = 'status-dot offline';
   }
 }
 
@@ -305,11 +382,15 @@ inputEl.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
 sendBtn.addEventListener('click', sendMessage);
-if(suggestionsEl) suggestionsEl.addEventListener('click', handleSuggestion);
+if (suggestionsEl) suggestionsEl.addEventListener('click', handleSuggestion);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen) closeChat(); });
 document.addEventListener('click', (e) => {
   if (isOpen && !widget.contains(e.target) && !fab.contains(e.target)) closeChat();
 });
+
+// CTA buttons
+const demoBtn = document.getElementById('demo-cta-btn');
+if (demoBtn) demoBtn.addEventListener('click', startDemo);
 
 (function init() {
   checkServerStatus();
