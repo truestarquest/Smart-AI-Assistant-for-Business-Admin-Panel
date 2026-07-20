@@ -3,38 +3,70 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="AI-асистент — розумний чат-бот для вашого сайту" />
-  <title>AI Асистент</title>
+  <meta name="description" content="Aegis AI — розумний чат-асистент для вашого магазину електроніки" />
+  <title>Aegis AI — Асистент</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="chat-widget.css" />
 </head>
 <body>
 
+  <!-- Фоновий шар: дрейфуючі "льодовикові" плями світла -->
+  <div class="ambient-background" aria-hidden="true">
+    <span class="ambient-orb ambient-orb--one"></span>
+    <span class="ambient-orb ambient-orb--two"></span>
+    <span class="ambient-orb ambient-orb--three"></span>
+    <div class="ambient-grain"></div>
+  </div>
+
   <main class="demo-page">
-    <div class="demo-hero">
-      <div class="demo-badge">AI-POWERED</div>
-      <h1>AI Асистент</h1>
-      <p>Натисніть на кнопку чату в правому нижньому куті, щоб розпочати діалог.</p>
-      <div class="demo-status" id="demo-status">
-        <span class="status-dot"></span>
-        <span id="status-text">Перевірка підключення…</span>
+    <section class="demo-hero">
+      <div class="demo-hero-glass">
+        <span class="demo-badge">
+          <span class="demo-badge-dot" aria-hidden="true"></span>
+          AEGIS · AI-ASSISTANT
+        </span>
+
+        <h1 class="demo-title">
+          Ваш магазин.<br />
+          <span class="demo-title-accent">Розумний захист і сервіс.</span>
+        </h1>
+
+        <p class="demo-subtitle">
+          Aegis відповідає на питання клієнтів миттєво, ввічливо і саме тією мовою, якою пишуть вам.
+          Натисніть кнопку чату в правому нижньому куті, щоб побачити його в дії.
+        </p>
+
+        <div class="demo-status" id="demo-status">
+          <span class="status-dot"></span>
+          <span id="status-text">Перевірка підключення…</span>
+        </div>
+
+        <button class="demo-cta" id="demo-cta-btn" type="button">
+          Почати діалог
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6"/>
+          </svg>
+        </button>
       </div>
-    </div>
+    </section>
   </main>
 
   <!-- Чат-віджет -->
-  <div class="chat-widget" id="chat-widget" role="dialog" aria-label="Чат з AI-асистентом" aria-hidden="true">
-    <div class="chat-header">
+  <div class="chat-widget" id="chat-widget" role="dialog" aria-label="Чат з Aegis AI" aria-hidden="true">
+    <div class="chat-widget-glow" aria-hidden="true"></div>
+
+    <header class="chat-header">
       <div class="chat-header-info">
         <div class="chat-avatar">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <circle cx="12" cy="12" r="3" fill="currentColor"/>
+            <path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            <circle cx="12" cy="11" r="2.2" fill="currentColor"/>
           </svg>
         </div>
-        <div>
-          <div class="chat-name">AI Асистент</div>
+        <div class="chat-header-text">
+          <div class="chat-name">Aegis AI</div>
           <div class="chat-status">
             <span class="online-dot"></span> Онлайн
           </div>
@@ -45,13 +77,13 @@
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
-    </div>
+    </header>
 
     <div class="chat-messages" id="chat-messages" role="log" aria-live="polite">
       <div class="message message--bot" id="welcome-msg">
         <div class="message-avatar">🤖</div>
         <div class="message-bubble">
-          Привіт! 👋 Я AI-асистент. Чим можу допомогти?
+          Привіт! 👋 Я Aegis, AI-асистент. Чим можу допомогти?
           <div class="message-time">щойно</div>
         </div>
       </div>
@@ -79,7 +111,8 @@
   </div>
 
   <!-- FAB кнопка -->
-  <button class="chat-fab" id="chat-fab" aria-label="Відкрити чат з AI-асистентом">
+  <button class="chat-fab" id="chat-fab" aria-label="Відкрити чат з Aegis AI" aria-expanded="false">
+    <span class="fab-ring" aria-hidden="true"></span>
     <span class="fab-icon fab-icon--open">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>

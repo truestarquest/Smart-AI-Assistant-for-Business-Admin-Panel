@@ -3,11 +3,11 @@
 const API_BASE   = '';
 const API_STATUS = `${API_BASE}/api/status`;
 const API_CHAT   = `${API_BASE}/api/chat`;
-const BOT_NAME   = 'AI Асистент';
+const BOT_NAME   = 'Aegis AI';
 
 const fab           = document.getElementById('chat-fab');
 const widget        = document.getElementById('chat-widget');
-const closeBtn      = document.getElementById('chat-close-btn');
+const closeBtn       = document.getElementById('chat-close-btn');
 const messagesEl    = document.getElementById('chat-messages');
 const inputEl       = document.getElementById('chat-input');
 const sendBtn       = document.getElementById('chat-send-btn');
@@ -15,6 +15,7 @@ const suggestionsEl = document.getElementById('chat-suggestions');
 const fabBadge      = document.getElementById('fab-badge');
 const statusDot     = document.querySelector('.status-dot');
 const statusText    = document.getElementById('status-text');
+const heroCtaBtn    = document.getElementById('demo-cta-btn');
 
 let isOpen      = false;
 let isLoading   = false;
@@ -31,10 +32,6 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-// Відповіді бота приходять з нашого сервера (openaiService.js), а не безпосередньо від юзера,
-// тому джерелу довіряємо. Але щоб не рендерити довільний HTML (наприклад, якщо LLM щось
-// вигадає поза інструкцією), спочатку екрануємо ВСЕ, а потім вибірково "розекрановуємо"
-// тільки дозволений набір тегів форматування: <b>, <i>, <code>, <pre>.
 function sanitizeBotHtml(str) {
   const escaped = escapeHtml(str);
   return escaped.replace(/&lt;(\/?)(b|i|code|pre)&gt;/gi, '<$1$2>');
@@ -80,7 +77,6 @@ function addMessage(role, text, isTyping = false) {
   if (isTyping) {
     bubble.innerHTML = `<div class="typing-dots" aria-label="Асистент друкує"><span></span><span></span><span></span></div>`;
   } else {
-    // Для бота дозволяємо форматування (<b>,<i>,<code>,<pre>) від LLM, для юзера — тільки текст.
     const content = role === 'bot' ? sanitizeBotHtml(text) : escapeHtml(text);
     bubble.innerHTML = `<span>${content}</span><div class="message-time">${formatTime()}</div>`;
   }
@@ -187,10 +183,17 @@ document.addEventListener('click', (e) => {
   if (isOpen && !widget.contains(e.target) && !fab.contains(e.target)) closeChat();
 });
 
+// Нова кнопка "Почати діалог" у Hero-секції — просто відкриває той самий чат-віджет
+if (heroCtaBtn) {
+  heroCtaBtn.addEventListener('click', () => {
+    if (!isOpen) openChat();
+  });
+}
+
 (function init() {
   checkServerStatus();
   setInterval(checkServerStatus, 30_000);
   widget.setAttribute('aria-hidden', 'true');
   fab.setAttribute('aria-expanded', 'false');
-  console.log(`%c${BOT_NAME} Widget v1.0 initialized`, 'color:#6c63ff;font-weight:bold;');
+  console.log(`%c${BOT_NAME} Widget v2.0 (Glassmorphism) initialized`, 'color:#45c7c2;font-weight:bold;');
 })();
