@@ -7,18 +7,24 @@
   <title>Aegis AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&family=Unbounded:wght@500;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="chat-widget.css" />
 </head>
 <body>
 
   <!-- Background Glows -->
-  <div class="ambient-background"></div>
+  <div class="ambient-background">
+    <div class="ambient-orb ambient-orb--one"></div>
+    <div class="ambient-orb ambient-orb--two"></div>
+    <div class="ambient-orb ambient-orb--three"></div>
+    <div class="ambient-grain"></div>
+  </div>
 
   <!-- Header / Navigation -->
   <header class="main-header">
     <div class="logo" data-i18n="logo">AEGIS AI</div>
-    <div class="lang-switcher">
+    <div class="lang-switcher" data-active="uk">
+      <span class="lang-slider" aria-hidden="true"></span>
       <button class="lang-btn active" data-lang="uk">UA</button>
       <button class="lang-btn" data-lang="en">EN</button>
     </div>
@@ -29,7 +35,7 @@
     <div class="status-badge" data-i18n="badge">• AEGIS AI — AUTOMATED BOOKING & LEAD CAPTURE</div>
     <h1 class="hero-title" data-i18n="hero_title">Інтелект, що перетворює трафік на клієнтів.</h1>
     <p class="hero-subtitle" data-i18n="hero_subtitle">Aegis — це не просто чат. Це автономна система, яка миттєво вступає в діалог, природно кваліфікує потреби відвідувачів, збирає контакти та бронює зустрічі. Поки ви відпочиваєте, Aegis працює на ваш бізнес.</p>
-    
+
     <div class="hero-actions">
       <button class="btn-primary" id="integrate-btn" data-i18n="btn_primary">Інтегрувати Aegis</button>
       <button class="btn-secondary" id="demo-cta-btn" data-i18n="btn_secondary">Дивитись демо</button>
@@ -39,26 +45,22 @@
   <!-- 2. Features Grid -->
   <section class="features-section">
     <div class="features-grid">
-      <!-- Card 1 -->
-      <div class="feature-card glass-panel">
+      <div class="feature-card glass-panel reveal">
         <div class="feature-icon">📅</div>
         <h3 class="feature-title" data-i18n="feature1_title">Автоматичне бронювання</h3>
         <p class="feature-desc" data-i18n="feature1_desc">Інтелектуальний підбір слотів. Aegis аналізує ваш розклад, пропонує клієнту зручний час та автоматично фіксує запис без участі менеджера.</p>
       </div>
-      <!-- Card 2 -->
-      <div class="feature-card glass-panel">
+      <div class="feature-card glass-panel reveal">
         <div class="feature-icon">🎯</div>
         <h3 class="feature-title" data-i18n="feature2_title">Кваліфікація лідів</h3>
         <p class="feature-desc" data-i18n="feature2_desc">Жодних "мертвих" діалогів. Бот майстерно та природно вплітає запитання в розмову, отримуючи ім'я, телефон/Telegram та суть задачі клієнта.</p>
       </div>
-      <!-- Card 3 -->
-      <div class="feature-card glass-panel">
+      <div class="feature-card glass-panel reveal">
         <div class="feature-icon">🔒</div>
         <h3 class="feature-title" data-i18n="feature3_title">Безпечна синхронізація</h3>
         <p class="feature-desc" data-i18n="feature3_desc">One-Time Deep Links. Інноваційна технологія одноразових токенів для безшовного та захищеного перенесення розмови з вебсайту прямо в Telegram клієнта.</p>
       </div>
-      <!-- Card 4 -->
-      <div class="feature-card glass-panel">
+      <div class="feature-card glass-panel reveal">
         <div class="feature-icon">⚡</div>
         <h3 class="feature-title" data-i18n="feature4_title">Миттєвий сервіс</h3>
         <p class="feature-desc" data-i18n="feature4_desc">Нуль очікувань. Блискавична реакція за 0.5 секунди в будь-який час доби. Ваші клієнти завжди отримують увагу першими.</p>
@@ -68,19 +70,19 @@
 
   <!-- 3. How It Works -->
   <section class="how-it-works">
-    <h2 class="section-title" data-i18n="hiw_title">Автономність у 3 кроки.</h2>
+    <h2 class="section-title reveal" data-i18n="hiw_title">Автономність у 3 кроки.</h2>
     <div class="steps-container">
-      <div class="step">
+      <div class="step reveal">
         <div class="step-number">01</div>
         <h4 data-i18n="step1_title">Швидка інтеграція</h4>
         <p data-i18n="step1_desc">Додайте один рядок коду на ваш сайт — і віджет із преміальним дизайном Glassmorphism готовий до роботи за 2 хвилини.</p>
       </div>
-      <div class="step">
+      <div class="step reveal">
         <div class="step-number">02</div>
         <h4 data-i18n="step2_title">Налаштування нейронів</h4>
         <p data-i18n="step2_desc">Завантажте ваші прайси, FAQ або правила запису. Aegis швидко адаптується під специфіку та Tone of Voice вашого бізнесу.</p>
       </div>
-      <div class="step">
+      <div class="step reveal">
         <div class="step-number">03</div>
         <h4 data-i18n="step3_title">Перехоплення лідів</h4>
         <p data-i18n="step3_desc">Aegis бере на себе всю рутину. Ви отримуєте "гарячі" ліди, готові контакти та записи прямо у вашу CRM чи закритий Telegram-канал.</p>
@@ -89,11 +91,10 @@
   </section>
 
   <!-- 4. Pricing Cards -->
-  <section class="pricing-section">
-    <h2 class="section-title" data-i18n="pricing_title">Прозора архітектура цін.</h2>
+  <section class="pricing-section" id="pricing">
+    <h2 class="section-title reveal" data-i18n="pricing_title">Прозора архітектура цін.</h2>
     <div class="pricing-grid">
-      <!-- Starter -->
-      <div class="pricing-card glass-panel">
+      <div class="pricing-card glass-panel reveal">
         <h3 class="pricing-name">Starter</h3>
         <div class="pricing-price">$29 <span data-i18n="mo">/ міс</span></div>
         <ul class="pricing-features">
@@ -103,8 +104,7 @@
           <li data-i18n="price_starter_f4">Email сповіщення про лідів</li>
         </ul>
       </div>
-      <!-- Pro (Highlighted) -->
-      <div class="pricing-card glass-panel highlighted">
+      <div class="pricing-card glass-panel highlighted reveal" id="pro-card">
         <div class="pricing-badge" data-i18n="pricing_pro_badge">Рекомендований</div>
         <h3 class="pricing-name">Pro</h3>
         <div class="pricing-price">$79 <span data-i18n="mo">/ міс</span></div>
@@ -115,8 +115,7 @@
           <li data-i18n="price_pro_f4">Пряма CRM-інтеграція та Webhooks</li>
         </ul>
       </div>
-      <!-- Enterprise -->
-      <div class="pricing-card glass-panel">
+      <div class="pricing-card glass-panel reveal">
         <h3 class="pricing-name">Enterprise</h3>
         <div class="pricing-price" data-i18n="custom">Custom</div>
         <ul class="pricing-features">
@@ -131,13 +130,13 @@
 
   <!-- 5. Testimonials -->
   <section class="testimonials-section">
-    <h2 class="section-title" data-i18n="testi_title">Системи перевірені в бойових умовах.</h2>
+    <h2 class="section-title reveal" data-i18n="testi_title">Системи перевірені в бойових умовах.</h2>
     <div class="testi-grid">
-      <div class="testi-card glass-panel">
+      <div class="testi-card glass-panel reveal">
         <p class="testi-text" data-i18n="testi_1_text">"Aegis повністю закрив нам питання з нічними клієнтами. 30% запитів прилітає після опівночі. Бот сам кваліфікує ліда, бере номер і записує в CRM. Зранку менеджери просто дзвонять гарячим клієнтам."</p>
         <div class="testi-author" data-i18n="testi_1_author">— Олександр, Власник AutoParts UA</div>
       </div>
-      <div class="testi-card glass-panel">
+      <div class="testi-card glass-panel reveal">
         <p class="testi-text" data-i18n="testi_2_text">"Інтеграція справді зайняла 2 хвилини. Найбільше вразило те, як бот переводить клієнта в Telegram (One-Time Links) — жодних втрат контактів, навіть якщо людина закрила вкладку браузера."</p>
         <div class="testi-author" data-i18n="testi_2_author">— Марина, СЕО BeautyHub</div>
       </div>
@@ -146,17 +145,17 @@
 
   <!-- 6. FAQ -->
   <section class="faq-section">
-    <h2 class="section-title" data-i18n="faq_title">Декодування невідомого.</h2>
+    <h2 class="section-title reveal" data-i18n="faq_title">Декодування невідомого.</h2>
     <div class="faq-list">
-      <div class="faq-item glass-panel">
+      <div class="faq-item glass-panel reveal">
         <h4 data-i18n="faq_1_q">Q: Чи потрібні навички програмування для налаштування?</h4>
         <p data-i18n="faq_1_a">A: Жодних. Ви просто додаєте скрипт на сайт, а базу знань (FAQ, прайси) заповнюєте звичайним текстом у зручній адмін-панелі.</p>
       </div>
-      <div class="faq-item glass-panel">
+      <div class="faq-item glass-panel reveal">
         <h4 data-i18n="faq_2_q">Q: Чи розуміє Aegis сленг та помилки в тексті?</h4>
         <p data-i18n="faq_2_a">A: Так. Нейромережа розпізнає контекст, ігнорує граматичні помилки та може спілкуватися як діловою мовою, так і більш вільно, дзеркалячи емоції вашого клієнта.</p>
       </div>
-      <div class="faq-item glass-panel">
+      <div class="faq-item glass-panel reveal">
         <h4 data-i18n="faq_3_q">Q: Що відбувається, якщо бот не знає відповіді?</h4>
         <p data-i18n="faq_3_a">A: Бот має вбудований запобіжник (Failsafe). Він ввічливо повідомить, що це питання краще обговорити зі спеціалістом, візьме контакти і миттєво відправить сповіщення вам у Telegram.</p>
       </div>
@@ -173,30 +172,45 @@
     <div class="footer-copy" data-i18n="footer_copy">© 2026 Aegis Systems. Всі права захищено.</div>
   </footer>
 
-  <!-- Chat Widget (залишається як було в Stage 9) -->
+  <!-- Chat Widget -->
   <button id="chat-fab" class="chat-fab" aria-label="Відкрити чат">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fab-icon-chat"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    <span class="fab-ring" aria-hidden="true"></span>
+    <span class="fab-icon fab-icon--open">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    </span>
+    <span class="fab-icon fab-icon--close">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </span>
   </button>
 
-  <aside id="chat-widget" class="chat-widget glass-panel hidden">
+  <aside id="chat-widget" class="chat-widget glass-panel">
+    <div class="chat-widget-glow" aria-hidden="true"></div>
     <header class="chat-header">
-      <div class="bot-info">
-        <span class="bot-name">Aegis AI</span>
-        <span class="bot-status"><span class="status-dot online"></span> Online</span>
+      <div class="chat-header-info">
+        <div class="chat-avatar">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        </div>
+        <div>
+          <div class="chat-name">Aegis AI</div>
+          <div class="chat-status"><span class="status-dot online"></span> Online</div>
+        </div>
       </div>
-      <button id="close-chat" class="icon-btn">&times;</button>
+      <button id="chat-close-btn" class="chat-close-btn" aria-label="Закрити чат">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
     </header>
-    
-    <div class="chat-messages" id="chat-messages">
-      <div class="message bot">
-        <p>Вітаю! Я Aegis AI. Чим можу допомогти?</p>
-      </div>
+
+    <div class="chat-messages" id="chat-messages"></div>
+
+    <div class="chat-suggestions" id="chat-suggestions">
+      <button class="suggestion-chip" data-text="Скільки коштує Pro тариф?">Скільки коштує Pro?</button>
+      <button class="suggestion-chip" data-text="Як відбувається інтеграція з сайтом?">Як інтегрувати?</button>
     </div>
-    
+
     <footer class="chat-input-area">
-      <input type="text" id="chat-input" placeholder="Напишіть повідомлення..." />
-      <button id="send-btn" class="send-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      <textarea id="chat-input" class="chat-input" rows="1" placeholder="Напишіть повідомлення..."></textarea>
+      <button id="chat-send-btn" class="chat-send-btn" disabled aria-label="Надіслати">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
       </button>
     </footer>
   </aside>
