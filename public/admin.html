@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · AI Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="view-login" class="login-screen">
+  <div class="login-ambient" aria-hidden="true"></div>
+
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14" stroke="url(#g1)" stroke-width="2"/>
+          <circle cx="16" cy="16" r="4" fill="url(#g1)"/>
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="32" y2="32">
+              <stop stop-color="#4CC9F0"/>
+              <stop offset="1" stop-color="#8B5CF6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Admin Console</h1>
+        <p>AI Assistant · керування та моніторинг</p>
+      </div>
+    </div>
+
+    <div class="waveform" id="login-waveform" aria-hidden="true"></div>
+
+    <form id="login-form" class="login-form" autocomplete="off">
+      <label for="admin-key">Admin Key</label>
+      <input type="password" id="admin-key" name="admin-key" placeholder="super-secret-admin-key-change-me" autocomplete="off" required>
+      <button type="submit" class="btn btn-primary btn-block">
+        <span>Увійти</span>
+      </button>
+      <p id="login-error" class="login-error" hidden></p>
+    </form>
+
+    <p class="login-hint">Ключ перевіряється при першому запиті та зберігається локально у цьому браузері.</p>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="view-app" class="app-shell" hidden>
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark small">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14" stroke="url(#g2)" stroke-width="2"/>
+          <circle cx="16" cy="16" r="4" fill="url(#g2)"/>
+          <defs>
+            <linearGradient id="g2" x1="0" y1="0" x2="32" y2="32">
+              <stop stop-color="#4CC9F0"/>
+              <stop offset="1" stop-color="#8B5CF6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span>Admin</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="overview">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 13h6V4H4v9zm0 7h6v-5H4v5zm10 0h6V11h-6v9zm0-16v5h6V4h-6z" fill="currentColor"/></svg>
+        <span>Огляд</span>
+      </button>
+      <button class="nav-item" data-view="conversations">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16v12H7l-3 3V4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span>Діалоги</span>
+      </button>
+      <button class="nav-item" data-view="users">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 19c.8-3.2 3-4.8 5.5-4.8s4.7 1.6 5.5 4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M15.5 8.4a3 3 0 1 1 3.7 2.9M19 14c2 .5 3.2 1.8 3.7 3.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span>Користувачі</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="conn-status">
+        <span class="pulse-dot" id="conn-dot"></span>
+        <span id="conn-label">З'єднання…</span>
+      </div>
+      <button id="logout-btn" class="btn-ghost">Вийти</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h2 id="page-title">Огляд</h2>
+        <p id="page-subtitle">Стан асистента у реальному часі</p>
+      </div>
+      <div class="waveform small" id="header-waveform" aria-hidden="true"></div>
+    </header>
+
+    <div class="content">
+
+      <!-- ---- OVERVIEW ---- -->
+      <section id="view-overview" class="view active">
+        <div class="stat-grid" id="stat-grid">
+          <div class="stat-card" data-glow="cyan">
+            <span class="stat-label">Users</span>
+            <span class="stat-value" id="stat-users">—</span>
+            <span class="stat-foot">усього зареєстровано</span>
+          </div>
+          <div class="stat-card" data-glow="violet">
+            <span class="stat-label">Messages</span>
+            <span class="stat-value" id="stat-messages">—</span>
+            <span class="stat-foot">повідомлень у системі</span>
+          </div>
+          <div class="stat-card" data-glow="mix">
+            <span class="stat-label">Active sessions</span>
+            <span class="stat-value" id="stat-sessions">—</span>
+            <span class="stat-foot">унікальних діалогів</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Останні сесії</h3>
+            <button class="btn-ghost small" data-refresh="overview">Оновити</button>
+          </div>
+          <div id="overview-sessions" class="session-list compact"></div>
+        </div>
+      </section>
+
+      <!-- ---- CONVERSATIONS ---- -->
+      <section id="view-conversations" class="view">
+        <div class="split">
+          <div class="panel session-panel">
+            <div class="panel-head">
+              <h3>Сесії</h3>
+              <button class="btn-ghost small" data-refresh="sessions">Оновити</button>
+            </div>
+            <div id="session-list" class="session-list"></div>
+          </div>
+
+          <div class="panel thread-panel">
+            <div class="panel-head">
+              <h3 id="thread-title">Оберіть сесію</h3>
+              <span id="thread-meta" class="muted"></span>
+            </div>
+            <div id="thread" class="thread">
+              <div class="empty-state">
+                <p>Виберіть сесію зліва, щоб переглянути листування.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- USERS ---- -->
+      <section id="view-users" class="view">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Користувачі</h3>
+            <div class="panel-actions">
+              <button class="btn-ghost small" data-refresh="users">Оновити</button>
+              <button class="btn btn-primary small" id="add-user-btn">+ Додати</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="users-table">
+              <thead><tr id="users-thead-row"></tr></thead>
+              <tbody id="users-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ============ USER MODAL ============ -->
+<div id="user-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">Новий користувач</h3>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <form id="user-form" class="modal-form"></form>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="admin.js"></script>
+</body>
+</html>

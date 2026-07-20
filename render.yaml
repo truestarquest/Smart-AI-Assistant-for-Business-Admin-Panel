@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: aegis-ai-assistant
+    env: node
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        sync: false
+      - key: OPENAI_BASE_URL
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ADMIN_KEY
+        sync: false
+      - key: ALLOWED_ORIGIN
+        sync: false
+      - key: MAX_MESSAGE_LENGTH
+        value: "1000"
+      - key: TZ
+        value: "Europe/Kyiv"

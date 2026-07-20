@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AI-асистент — розумний чат-бот для вашого сайту" />
+  <title>AI Асистент</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="chat-widget.css" />
+</head>
+<body>
+
+  <main class="demo-page">
+    <div class="demo-hero">
+      <div class="demo-badge">AI-POWERED</div>
+      <h1>AI Асистент</h1>
+      <p>Натисніть на кнопку чату в правому нижньому куті, щоб розпочати діалог.</p>
+      <div class="demo-status" id="demo-status">
+        <span class="status-dot"></span>
+        <span id="status-text">Перевірка підключення…</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Чат-віджет -->
+  <div class="chat-widget" id="chat-widget" role="dialog" aria-label="Чат з AI-асистентом" aria-hidden="true">
+    <div class="chat-header">
+      <div class="chat-header-info">
+        <div class="chat-avatar">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" fill="currentColor"/>
+          </svg>
+        </div>
+        <div>
+          <div class="chat-name">AI Асистент</div>
+          <div class="chat-status">
+            <span class="online-dot"></span> Онлайн
+          </div>
+        </div>
+      </div>
+      <button class="chat-close-btn" id="chat-close-btn" aria-label="Закрити чат">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="chat-messages" id="chat-messages" role="log" aria-live="polite">
+      <div class="message message--bot" id="welcome-msg">
+        <div class="message-avatar">🤖</div>
+        <div class="message-bubble">
+          Привіт! 👋 Я AI-асистент. Чим можу допомогти?
+          <div class="message-time">щойно</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-suggestions" id="chat-suggestions">
+      <button class="suggestion-chip" data-text="Що ти вмієш?">💡 Що ти вмієш?</button>
+      <button class="suggestion-chip" data-text="Розкажи про проєкт">📋 Про проєкт</button>
+      <button class="suggestion-chip" data-text="Допоможи з питанням">🙋 Задати питання</button>
+    </div>
+
+    <div class="chat-input-area">
+      <textarea
+        class="chat-input" id="chat-input"
+        placeholder="Напишіть повідомлення…"
+        rows="1" aria-label="Поле вводу повідомлення" maxlength="1000"
+      ></textarea>
+      <button class="chat-send-btn" id="chat-send-btn" aria-label="Надіслати повідомлення" disabled>
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- FAB кнопка -->
+  <button class="chat-fab" id="chat-fab" aria-label="Відкрити чат з AI-асистентом">
+    <span class="fab-icon fab-icon--open">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+      </svg>
+    </span>
+    <span class="fab-icon fab-icon--close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </span>
+    <span class="fab-badge" id="fab-badge" hidden>1</span>
+  </button>
+
+  <script src="chat-widget.js"></script>
+</body>
+</html>
