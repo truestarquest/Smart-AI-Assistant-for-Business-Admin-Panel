@@ -158,6 +158,7 @@ html, body {
   border-radius: 100px;
   box-shadow: 0 4px 14px rgba(69, 199, 194, 0.35);
   transition: transform 0.3s cubic-bezier(0.65, 0, 0.35, 1);
+  will-change: transform;
   z-index: 0;
 }
 .lang-switcher[data-active="en"] .lang-slider { transform: translateX(100%); }
@@ -242,6 +243,7 @@ html, body {
   font-family: var(--font-display); font-size: 15px; font-weight: 600;
   padding: 14px 28px; border-radius: 100px; cursor: pointer; border: none;
   transition: transform 0.4s var(--ease-luxe), box-shadow 0.4s var(--ease-luxe), background 0.4s var(--ease-luxe), border-color 0.4s var(--ease-luxe);
+  will-change: transform;
 }
 .btn-primary {
   background: linear-gradient(135deg, var(--glacier-mist), var(--aurora-cyan));
@@ -273,6 +275,7 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
   border-radius: var(--radius-md); padding: 32px;
   box-shadow: var(--shadow-deep);
   transition: border-color 0.5s var(--ease-luxe), box-shadow 0.5s var(--ease-luxe);
+  will-change: transform;
 }
 
 /* Stage 14: swapped the heavy interior radial glow for a sleeker,
@@ -322,6 +325,7 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
   display: flex; flex-direction: column; align-items: center; text-align: center;
   background: var(--glass-fill-soft); border-radius: var(--radius-md); padding: 32px;
   border: 1px solid transparent; transition: border-color 0.4s var(--ease-luxe), transform 0.4s var(--ease-luxe);
+  will-change: transform;
 }
 .step:hover { border-color: var(--glass-border); transform: translateY(-4px); }
 .step-number { font-family: var(--font-heading); font-size: 44px; font-weight: 700; color: var(--glass-border); margin-bottom: 16px; }
@@ -366,6 +370,7 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
   background: transparent; color: var(--glacier-ice);
   border: 1px solid var(--glass-border);
   transition: transform 0.35s var(--ease-luxe), border-color 0.35s var(--ease-luxe), background 0.35s var(--ease-luxe);
+  will-change: transform;
 }
 .pricing-cta:hover { border-color: var(--glacier-mist); background: var(--glass-fill); transform: translateY(-2px); }
 .pricing-cta--primary {
@@ -451,6 +456,7 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
   overflow: hidden;
   opacity: 0; transform: translateY(24px) scale(0.98); pointer-events: none;
   transition: opacity 0.35s var(--ease-luxe), transform 0.35s var(--ease-luxe);
+  will-change: transform, opacity;
 }
 .chat-widget.is-open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
 
@@ -492,7 +498,7 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
 .chat-messages::-webkit-scrollbar { width: 6px; }
 .chat-messages::-webkit-scrollbar-thumb { background: var(--lagoon-line); border-radius: 100px; }
 
-.message { display: flex; gap: 10px; max-width: 88%; animation: messageIn 0.25s ease; }
+.message { display: flex; gap: 10px; max-width: 88%; animation: messageIn 0.25s ease; will-change: transform, opacity; }
 @keyframes messageIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 .message--user { align-self: flex-end; flex-direction: row-reverse; }
 
@@ -527,6 +533,7 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
   background: var(--glass-fill-soft); border: 1px solid var(--glass-border);
   border-radius: 100px; padding: 7px 12px; cursor: pointer;
   transition: background 0.3s var(--ease-luxe), border-color 0.3s var(--ease-luxe), transform 0.3s var(--ease-luxe);
+  will-change: transform;
 }
 .suggestion-chip:hover { background: rgba(191, 234, 227, 0.14); border-color: var(--glacier-mist); transform: translateY(-1px); }
 
@@ -547,6 +554,7 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
   color: var(--lagoon-deep);
   display: flex; align-items: center; justify-content: center; cursor: pointer;
   transition: opacity 0.2s ease, transform 0.15s ease;
+  will-change: transform;
 }
 .chat-send-btn svg { width: 18px; height: 18px; }
 .chat-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -564,10 +572,11 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
   display: flex; align-items: center; justify-content: center; cursor: pointer;
   box-shadow: 0 12px 34px rgba(69, 199, 194, 0.35);
   transition: transform 0.3s var(--ease-luxe);
+  will-change: transform;
 }
 .chat-fab:hover { transform: translateY(-2px) scale(1.03); }
 
-.fab-ring { position: absolute; inset: -6px; border-radius: 50%; border: 1.5px solid var(--glacier-mist); opacity: 0; animation: fabPulse 2.6s ease-out infinite; }
+.fab-ring { position: absolute; inset: -6px; border-radius: 50%; border: 1.5px solid var(--glacier-mist); opacity: 0; animation: fabPulse 2.6s ease-out infinite; will-change: transform, opacity; }
 @keyframes fabPulse { 0% { transform: scale(0.9); opacity: 0.5; } 100% { transform: scale(1.35); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .fab-ring { animation: none; opacity: 0; } }
 
@@ -589,4 +598,49 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
 @media (max-width: 480px) {
   .chat-widget { right: 16px; left: 16px; width: auto; bottom: 92px; height: min(72vh, 600px); }
   .chat-fab { right: 16px; bottom: 16px; }
+}
+
+/* =========================================================
+   Stage 15: Mobile performance mode
+   Budget devices (e.g. Redmi 9A) drop frames during scroll because
+   of backdrop-filter blur on the glass panels and the blurred,
+   animated ambient orbs. Below 768px we swap the "frosted glass"
+   look for a dense flat fill (same dark tone, no GPU blur cost)
+   and collapse the orbs into a single static gradient.
+   ========================================================= */
+
+@media (max-width: 767px) {
+  /* 1. Kill backdrop-filter blur on every glass surface — replace
+        with an opaque-enough flat fill so it still reads as a
+        premium dark panel, just without the GPU-heavy frosting. */
+  .lang-switcher,
+  .btn-secondary,
+  .glass-panel,
+  .main-footer,
+  .chat-widget {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(11, 33, 49, 0.92);
+  }
+
+  /* The decorative interior glow inside the open chat widget is a
+     static (non-animated) filter: blur() — still a per-frame GPU
+     cost while scrolling the chat, so flatten it too. */
+  .chat-widget-glow {
+    filter: none;
+    opacity: 0.06;
+  }
+
+  /* 2. Ambient orbs: no blur, no orbital drift animation. Fully
+        hide the individual orb layers (unblurred moving circles
+        would look broken, not premium) and replace them with one
+        cheap static radial gradient on the container instead. */
+  .ambient-orb {
+    animation: none;
+    filter: none;
+    display: none;
+  }
+  .ambient-background {
+    background: radial-gradient(circle at 50% 20%, rgba(69, 199, 194, 0.15), transparent 70%), #071c2c;
+  }
 }
