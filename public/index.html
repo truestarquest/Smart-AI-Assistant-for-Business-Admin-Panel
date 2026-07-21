@@ -6,20 +6,44 @@
   <meta name="description" content="Aegis AI — Інтелект, що перетворює трафік на клієнтів" />
   <title>Aegis AI</title>
 
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="canonical" href="https://smart-ai-assistant-for-business-admin.onrender.com/" />
+
   <!-- Open Graph / rich link previews (Telegram, FB, LinkedIn, etc.) -->
-  <!-- NOTE: replace og:url with your real production domain, and make
-       sure /og-image.png (1200x630) actually exists in /public before
-       deploying — this tag alone won't create the file. -->
+  <!-- NOTE: og:url/og:image use the real production domain — Telegram and
+       some other crawlers require an absolute URL for og:image, a
+       relative path silently fails to preview on them. -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Aegis AI — Інтелект, що перетворює трафік на клієнтів" />
   <meta property="og:description" content="Автономна AI-система, яка кваліфікує лідів, бронює зустрічі та переносить розмову в Telegram — без участі менеджера." />
-  <meta property="og:image" content="/og-image.png" />
+  <meta property="og:image" content="https://smart-ai-assistant-for-business-admin.onrender.com/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:url" content="https://smart-ai-assistant-for-business-admin.onrender.com/" />
   <meta property="og:locale" content="uk_UA" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Aegis AI — Інтелект, що перетворює трафік на клієнтів" />
   <meta name="twitter:description" content="Автономна AI-система, яка кваліфікує лідів, бронює зустрічі та переносить розмову в Telegram — без участі менеджера." />
-  <meta name="twitter:image" content="/og-image.png" />
+  <meta name="twitter:image" content="https://smart-ai-assistant-for-business-admin.onrender.com/og-image.png" />
+
+  <!-- JSON-LD structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Aegis AI",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "Автономна AI-система, яка кваліфікує лідів, бронює зустрічі та переносить розмову в Telegram без участі менеджера.",
+    "url": "https://smart-ai-assistant-for-business-admin.onrender.com/",
+    "image": "https://smart-ai-assistant-for-business-admin.onrender.com/og-image.png",
+    "offers": [
+      { "@type": "Offer", "name": "Starter", "price": "29", "priceCurrency": "USD" },
+      { "@type": "Offer", "name": "Pro", "price": "79", "priceCurrency": "USD" },
+      { "@type": "Offer", "name": "Enterprise", "priceCurrency": "USD", "description": "Custom pricing" }
+    ]
+  }
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -200,8 +224,8 @@
   <footer class="main-footer">
     <div class="footer-slogan" data-i18n="footer_slogan">AEGIS AI. Цифровий інтелект на варті вашого бізнесу.</div>
     <div class="footer-status">
-      <span class="status-dot online pulse"></span>
-      <span data-i18n="footer_status">All Systems Operational</span>
+      <span class="status-dot online pulse" id="footer-status-dot"></span>
+      <span id="footer-status-text">All Systems Operational</span>
     </div>
     <div class="footer-copy" data-i18n="footer_copy">© 2026 Aegis Systems. Всі права захищено.</div>
   </footer>
@@ -234,7 +258,7 @@
       </button>
     </header>
 
-    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-messages" id="chat-messages" aria-live="polite" aria-atomic="false"></div>
 
     <div class="chat-suggestions" id="chat-suggestions">
       <button class="suggestion-chip" data-text="Скільки коштує Pro тариф?">Скільки коштує Pro?</button>
