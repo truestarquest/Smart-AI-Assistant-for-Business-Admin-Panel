@@ -11,7 +11,10 @@ const messagesEl    = document.getElementById('chat-messages');
 const inputEl       = document.getElementById('chat-input');
 const sendBtn       = document.getElementById('chat-send-btn');
 const suggestionsEl = document.getElementById('chat-suggestions');
-const statusDot     = document.querySelector('.chat-status .status-dot');
+const statusDot        = document.querySelector('.chat-status .status-dot');
+const footerStatusDot  = document.getElementById('footer-status-dot');
+const footerStatusText = document.getElementById('footer-status-text');
+let serverOnline = true; // optimistic default until the first real check resolves
 
 let isOpen    = false;
 let isLoading = false;
@@ -88,6 +91,7 @@ const translations = {
 
     footer_slogan: "AEGIS AI. Цифровий інтелект на варті вашого бізнесу.",
     footer_status: "All Systems Operational",
+    footer_status_offline: "Тимчасово недоступно",
     footer_copy: "© 2026 Aegis Systems. Всі права захищено.",
 
     chat_greeting: "Вітаю! Я Aegis AI. Чим можу допомогти?",
@@ -157,6 +161,7 @@ const translations = {
 
     footer_slogan: "AEGIS AI. Digital intelligence guarding your business.",
     footer_status: "All Systems Operational",
+    footer_status_offline: "Temporarily Unavailable",
     footer_copy: "© 2026 Aegis Systems. All rights reserved.",
 
     chat_greeting: "Hi! I'm Aegis AI. How can I help?",
@@ -164,7 +169,15 @@ const translations = {
   }
 };
 
-let currentLang = 'uk';
+const LANG_STORAGE_KEY = 'aegis_lang';
+let currentLang = (() => {
+  try {
+    const saved = localStorage.getItem(LANG_STORAGE_KEY);
+    return saved === 'en' || saved === 'uk' ? saved : 'uk';
+  } catch {
+    return 'uk'; // localStorage can throw in some privacy modes — fall back silently
+  }
+})();
 
 // Stage 14: Hologram Dissolve transition — tuned for an even smoother,
 // more "premium" feel. Sequence: (1) glitch-out — soft opacity drop
@@ -185,6 +198,12 @@ const GLITCH_OUT_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)'; // fast accelerate — s
 
 function applyLang(lang) {
   currentLang = lang;
+  document.documentElement.lang = lang; // a11y + SEO: screen readers and crawlers rely on this
+  try {
+    localStorage.setItem(LANG_STORAGE_KEY, lang);
+  } catch {
+    /* ignore — persistence is a nice-to-have, not required for the page to work */
+  }
   const elements = document.querySelectorAll('[data-i18n]');
 
   if (prefersReducedMotion) {
@@ -237,18 +256,24 @@ langBtns.forEach((btn) => {
     const lang = e.target.getAttribute('data-lang');
     if (langSwitcher) langSwitcher.setAttribute('data-active', lang);
     applyLang(lang);
+    updateFooterStatus();
     sweepBadge();
   });
 });
 
-// Apply default language immediately — previously this only ran on click,
-// so the page showed raw fallback text until the user touched the switcher.
+// Apply the active language (restored from localStorage, or 'uk' default)
+// immediately — previously this only ran on click, so the page showed raw
+// fallback text until the user touched the switcher.
 // Skip the transition on first load (nothing to dissolve from/to yet).
 (function initialApplyLang() {
+  document.documentElement.lang = currentLang;
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     const key = el.getAttribute('data-i18n');
-    if (translations.uk[key]) el.textContent = translations.uk[key];
+    if (translations[currentLang][key]) el.textContent = translations[currentLang][key];
   });
+  langBtns.forEach((b) => b.classList.toggle('active', b.getAttribute('data-lang') === currentLang));
+  if (langSwitcher) langSwitcher.setAttribute('data-active', currentLang);
+  updateFooterStatus();
 })();
 
 // =========================================================
@@ -519,15 +544,27 @@ function handleSuggestion(e) {
   sendMessage();
 }
 
+function updateFooterStatus() {
+  if (footerStatusDot) {
+    footerStatusDot.className = serverOnline ? 'status-dot online pulse' : 'status-dot offline';
+  }
+  if (footerStatusText) {
+    footerStatusText.textContent = serverOnline
+      ? translations[currentLang].footer_status
+      : translations[currentLang].footer_status_offline;
+  }
+}
+
 async function checkServerStatus() {
-  if (!statusDot) return;
   try {
     const res = await fetch(API_STATUS);
     const data = await res.json();
-    statusDot.className = data.success ? 'status-dot online pulse' : 'status-dot offline';
+    serverOnline = !!data.success;
   } catch {
-    statusDot.className = 'status-dot offline';
+    serverOnline = false;
   }
+  if (statusDot) statusDot.className = serverOnline ? 'status-dot online pulse' : 'status-dot offline';
+  updateFooterStatus();
 }
 
 fab.addEventListener('click', toggleChat);
