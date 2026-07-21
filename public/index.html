@@ -5,6 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Aegis AI — Інтелект, що перетворює трафік на клієнтів" />
   <title>Aegis AI</title>
+
+  <!-- Open Graph / rich link previews (Telegram, FB, LinkedIn, etc.) -->
+  <!-- NOTE: replace og:url with your real production domain, and make
+       sure /og-image.png (1200x630) actually exists in /public before
+       deploying — this tag alone won't create the file. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Aegis AI — Інтелект, що перетворює трафік на клієнтів" />
+  <meta property="og:description" content="Автономна AI-система, яка кваліфікує лідів, бронює зустрічі та переносить розмову в Telegram — без участі менеджера." />
+  <meta property="og:image" content="/og-image.png" />
+  <meta property="og:url" content="https://smart-ai-assistant-for-business-admin.onrender.com/" />
+  <meta property="og:locale" content="uk_UA" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Aegis AI — Інтелект, що перетворює трафік на клієнтів" />
+  <meta name="twitter:description" content="Автономна AI-система, яка кваліфікує лідів, бронює зустрічі та переносить розмову в Telegram — без участі менеджера." />
+  <meta name="twitter:image" content="/og-image.png" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&family=Unbounded:wght@500;700;800&display=swap" rel="stylesheet" />
@@ -38,7 +54,7 @@
 
     <div class="hero-actions">
       <button class="btn-primary" id="integrate-btn" data-i18n="btn_primary">Інтегрувати Aegis</button>
-      <button class="btn-secondary" id="demo-cta-btn" data-i18n="btn_secondary">Дивитись демо</button>
+      <button class="btn-secondary chat-opener" id="demo-cta-btn" data-i18n="btn_secondary">Дивитись демо</button>
     </div>
   </main>
 
@@ -103,6 +119,7 @@
           <li data-i18n="price_starter_f3">Стандартна база знань</li>
           <li data-i18n="price_starter_f4">Email сповіщення про лідів</li>
         </ul>
+        <button class="pricing-cta chat-opener" data-plan="starter" data-i18n="price_starter_cta">Обрати тариф</button>
       </div>
       <div class="pricing-card glass-panel highlighted reveal" id="pro-card">
         <div class="pricing-badge" data-i18n="pricing_pro_badge">Рекомендований</div>
@@ -114,6 +131,7 @@
           <li data-i18n="price_pro_f3">Авто-синхронізація (One-Time Deep Links)</li>
           <li data-i18n="price_pro_f4">Пряма CRM-інтеграція та Webhooks</li>
         </ul>
+        <button class="pricing-cta pricing-cta--primary chat-opener" data-plan="pro" data-i18n="price_pro_cta">Обрати тариф</button>
       </div>
       <div class="pricing-card glass-panel reveal">
         <h3 class="pricing-name">Enterprise</h3>
@@ -124,6 +142,7 @@
           <li data-i18n="price_ent_f3">Повний аудит безпеки</li>
           <li data-i18n="price_ent_f4">Персональний менеджер 24/7</li>
         </ul>
+        <button class="pricing-cta chat-opener" data-plan="enterprise" data-i18n="price_ent_cta">Зв'язатися з нами</button>
       </div>
     </div>
   </section>
@@ -148,16 +167,31 @@
     <h2 class="section-title reveal" data-i18n="faq_title">Декодування невідомого.</h2>
     <div class="faq-list">
       <div class="faq-item glass-panel reveal">
-        <h4 data-i18n="faq_1_q">Q: Чи потрібні навички програмування для налаштування?</h4>
-        <p data-i18n="faq_1_a">A: Жодних. Ви просто додаєте скрипт на сайт, а базу знань (FAQ, прайси) заповнюєте звичайним текстом у зручній адмін-панелі.</p>
+        <button class="faq-question" aria-expanded="false">
+          <span data-i18n="faq_1_q">Q: Чи потрібні навички програмування для налаштування?</span>
+          <svg class="faq-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          <p data-i18n="faq_1_a">A: Жодних. Ви просто додаєте скрипт на сайт, а базу знань (FAQ, прайси) заповнюєте звичайним текстом у зручній адмін-панелі.</p>
+        </div>
       </div>
       <div class="faq-item glass-panel reveal">
-        <h4 data-i18n="faq_2_q">Q: Чи розуміє Aegis сленг та помилки в тексті?</h4>
-        <p data-i18n="faq_2_a">A: Так. Нейромережа розпізнає контекст, ігнорує граматичні помилки та може спілкуватися як діловою мовою, так і більш вільно, дзеркалячи емоції вашого клієнта.</p>
+        <button class="faq-question" aria-expanded="false">
+          <span data-i18n="faq_2_q">Q: Чи розуміє Aegis сленг та помилки в тексті?</span>
+          <svg class="faq-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          <p data-i18n="faq_2_a">A: Так. Нейромережа розпізнає контекст, ігнорує граматичні помилки та може спілкуватися як діловою мовою, так і більш вільно, дзеркалячи емоції вашого клієнта.</p>
+        </div>
       </div>
       <div class="faq-item glass-panel reveal">
-        <h4 data-i18n="faq_3_q">Q: Що відбувається, якщо бот не знає відповіді?</h4>
-        <p data-i18n="faq_3_a">A: Бот має вбудований запобіжник (Failsafe). Він ввічливо повідомить, що це питання краще обговорити зі спеціалістом, візьме контакти і миттєво відправить сповіщення вам у Telegram.</p>
+        <button class="faq-question" aria-expanded="false">
+          <span data-i18n="faq_3_q">Q: Що відбувається, якщо бот не знає відповіді?</span>
+          <svg class="faq-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          <p data-i18n="faq_3_a">A: Бот має вбудований запобіжник (Failsafe). Він ввічливо повідомить, що це питання краще обговорити зі спеціалістом, візьме контакти і миттєво відправить сповіщення вам у Telegram.</p>
+        </div>
       </div>
     </div>
   </section>
