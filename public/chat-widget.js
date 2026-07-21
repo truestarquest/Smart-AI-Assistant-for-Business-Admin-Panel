@@ -65,6 +65,12 @@ const translations = {
     price_ent_f2: "Індивідуальні складні сценарії",
     price_ent_f3: "Повний аудит безпеки",
     price_ent_f4: "Персональний менеджер 24/7",
+    price_starter_cta: "Обрати тариф",
+    price_pro_cta: "Обрати тариф",
+    price_ent_cta: "Зв'язатися з нами",
+    plan_context_starter: "Я хочу дізнатися більше про тариф Starter",
+    plan_context_pro: "Я хочу дізнатися більше про тариф Pro",
+    plan_context_enterprise: "Я хочу дізнатися більше про тариф Enterprise",
 
     testi_title: "Системи перевірені в бойових умовах.",
     testi_1_text: "\"Aegis повністю закрив нам питання з нічними клієнтами. 30% запитів прилітає після опівночі. Бот сам кваліфікує ліда, бере номер і записує в CRM. Зранку менеджери просто дзвонять гарячим клієнтам.\"",
@@ -128,6 +134,12 @@ const translations = {
     price_ent_f2: "Custom complex scenarios",
     price_ent_f3: "Full security audit",
     price_ent_f4: "Dedicated account manager 24/7",
+    price_starter_cta: "Choose Plan",
+    price_pro_cta: "Choose Plan",
+    price_ent_cta: "Contact Us",
+    plan_context_starter: "I'd like to learn more about the Starter plan",
+    plan_context_pro: "I'd like to learn more about the Pro plan",
+    plan_context_enterprise: "I'd like to learn more about the Enterprise plan",
 
     testi_title: "Systems tested in combat conditions.",
     testi_1_text: "\"Aegis completely solved our after-hours support. 30% of inquiries hit after midnight. The bot qualifies the lead, takes the number, and logs it into our CRM. In the morning, our reps just call hot leads.\"",
@@ -265,6 +277,71 @@ if (integrateBtn) {
     setTimeout(pulseProCard, 650);
   });
 }
+
+// =========================================================
+// Phase 1: Pricing CTA buttons — open the chat and send a
+// pre-filled context message for the chosen plan through the real
+// sendMessage() flow (hits /api/chat, same as if the user typed it).
+// =========================================================
+const PLAN_CONTEXT_KEYS = {
+  starter: 'plan_context_starter',
+  pro: 'plan_context_pro',
+  enterprise: 'plan_context_enterprise',
+};
+
+function sendPlanContext(plan) {
+  const key = PLAN_CONTEXT_KEYS[plan];
+  const text = key && translations[currentLang][key];
+  if (!text) return;
+
+  const dispatch = () => {
+    inputEl.value = text;
+    autoResize();
+    sendMessage();
+  };
+
+  if (isOpen) {
+    dispatch();
+  } else {
+    openChat();
+    // let the opening animation + greeting settle before sending
+    setTimeout(dispatch, 500);
+  }
+}
+
+document.querySelectorAll('.pricing-cta').forEach((btn) => {
+  btn.addEventListener('click', () => sendPlanContext(btn.dataset.plan));
+});
+
+// =========================================================
+// Phase 1: FAQ Accordion — clicking a question expands its answer
+// (height/opacity transition, see CSS) and collapses any other open
+// item. aria-expanded kept in sync for accessibility.
+// =========================================================
+const faqItems = document.querySelectorAll('.faq-item');
+faqItems.forEach((item) => {
+  const question = item.querySelector('.faq-question');
+  const answer = item.querySelector('.faq-answer');
+  if (!question || !answer) return;
+
+  question.addEventListener('click', () => {
+    const isOpenItem = item.classList.contains('faq-open');
+
+    faqItems.forEach((other) => {
+      other.classList.remove('faq-open');
+      const otherQuestion = other.querySelector('.faq-question');
+      const otherAnswer = other.querySelector('.faq-answer');
+      if (otherQuestion) otherQuestion.setAttribute('aria-expanded', 'false');
+      if (otherAnswer) otherAnswer.style.maxHeight = null;
+    });
+
+    if (!isOpenItem) {
+      item.classList.add('faq-open');
+      question.setAttribute('aria-expanded', 'true');
+      answer.style.maxHeight = `${answer.scrollHeight}px`;
+    }
+  });
+});
 
 // =========================================================
 // Stage 11: Scroll Reveal via IntersectionObserver
@@ -466,12 +543,15 @@ const demoBtn = document.getElementById('demo-cta-btn');
 if (demoBtn) demoBtn.addEventListener('click', startDemo);
 
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen) closeChat(); });
-// Stage 14: root-cause fix — this used to fire on the SAME click that
-// startDemo() had just used to open the widget (demo-cta-btn sits
-// outside both `widget` and `fab`), instantly closing it again before
-// the user ever saw it open. Excluding demoBtn fixes it at the source.
+// Stage 14/Phase 1: root-cause fix, generalized — any button that
+// programmatically opens the widget from outside it (demo CTA, pricing
+// CTAs, and any future ones) must be excluded here, or this handler
+// fires on the SAME click that just opened the chat and instantly
+// closes it again. Rather than hardcoding each button id, any trigger
+// carries a shared `.chat-opener` class (see index.html) and is
+// excluded via closest().
 document.addEventListener('click', (e) => {
-  if (isOpen && !widget.contains(e.target) && !fab.contains(e.target) && !(demoBtn && demoBtn.contains(e.target))) {
+  if (isOpen && !widget.contains(e.target) && !fab.contains(e.target) && !e.target.closest('.chat-opener')) {
     closeChat();
   }
 });
