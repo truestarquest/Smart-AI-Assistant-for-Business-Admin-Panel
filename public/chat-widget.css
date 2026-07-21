@@ -176,13 +176,15 @@ html, body {
 
 /* Stage 13: Hologram Dissolve — the transient glitch/fade state applied
    by applyLang() in JS while text is swapped. Base transition here is
-   the "return" phase (~450ms, slow luxe easing); JS temporarily
-   overrides transition/opacity/filter for the quick "out" phase
-   (~380ms, soft opacity drop + minimal blur — no skew/shift), then
-   hands back to this default for the settle-back-in. Declared once
-   here so every [data-i18n] node shares the same resting transition. */
+   the "return"/glitch-in phase (550ms, slow luxe easing) — opacity,
+   blur, AND a tiny translateY settle. JS temporarily overrides
+   transition/opacity/filter/transform for the quick "out" phase
+   (380ms, a faster accelerate curve — soft opacity drop, minimal blur,
+   micro-translateY(2px), no skew), then hands back to this default for
+   the settle-back-in. Declared once here so every [data-i18n] node
+   shares the same resting transition. */
 [data-i18n] {
-  transition: opacity 0.45s var(--ease-luxe), filter 0.45s var(--ease-luxe);
+  transition: opacity 0.55s var(--ease-luxe), filter 0.55s var(--ease-luxe), transform 0.55s var(--ease-luxe);
 }
 
 /* =========================================================
@@ -270,20 +272,25 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
   backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
   border-radius: var(--radius-md); padding: 32px;
   box-shadow: var(--shadow-deep);
+  transition: border-color 0.5s var(--ease-luxe), box-shadow 0.5s var(--ease-luxe);
 }
 
-/* Stage 13: replaced the translateY hover-jump + hard border glow with a
-   soft interior light — a radial glow that fades in behind the card's
-   content (z-index: -1, so it never sits on top of text) as if the
-   frosted glass were filling with light from within. */
+/* Stage 14: swapped the heavy interior radial glow for a sleeker,
+   Vercel-style cue — a thin neon gradient line across the top edge
+   plus a soft outer border illumination. No transform/translateY jump,
+   no light flooding the card's own text. */
 .glass-panel::before {
   content: '';
-  position: absolute; inset: 0; z-index: -1;
+  position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 1;
   border-radius: inherit;
-  background: radial-gradient(circle at 50% 30%, rgba(69, 199, 194, 0.32), transparent 70%);
+  background: linear-gradient(90deg, transparent, var(--aurora-cyan), transparent);
   opacity: 0;
-  transition: opacity 0.6s var(--ease-luxe);
+  transition: opacity 0.5s var(--ease-luxe);
   pointer-events: none;
+}
+.glass-panel:hover {
+  border-color: rgba(69, 199, 194, 0.45);
+  box-shadow: var(--shadow-deep), 0 0 28px rgba(69, 199, 194, 0.14);
 }
 .glass-panel:hover::before { opacity: 1; }
 
