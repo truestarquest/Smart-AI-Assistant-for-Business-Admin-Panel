@@ -154,20 +154,22 @@ const translations = {
 
 let currentLang = 'uk';
 
-// Stage 13: Hologram Dissolve transition — slowed down and softened so
-// it reads as a high-end holographic update rather than a quick flicker.
-// Sequence: (1) glitch-out — soft opacity drop (0.1) + minimal blur,
-// no skew/shift, ~380ms; (2) swap textContent while faded out;
-// (3) glitch-in — fade/unblur back using the slow luxe cubic-bezier
-// defined in CSS ([data-i18n] base transition, ~450ms).
-// IMPORTANT: this only ever touches inline `style` (opacity/filter)
-// on [data-i18n] elements — it never reads or writes `classList`, so it
-// can never strip `.is-visible` from `.reveal` sections. Section
-// visibility and language are fully independent state. .logo and
-// .status-badge no longer carry data-i18n (see index.html), so they
-// sit outside this effect entirely — the badge gets its own sweep cue
-// instead (see the lang-btn click handler below).
+// Stage 14: Hologram Dissolve transition — tuned for an even smoother,
+// more "premium" feel. Sequence: (1) glitch-out — soft opacity drop
+// (0.1) + minimal blur + a 2px translateY dip, using a fast accelerate
+// curve, 380ms; (2) swap textContent while faded out; (3) glitch-in —
+// fade/unblur/settle back using the slow luxe cubic-bezier defined in
+// CSS ([data-i18n] base transition, 550ms).
+// IMPORTANT: this only ever touches inline `style`
+// (opacity/filter/transform) on [data-i18n] elements — it never reads
+// or writes `classList`, so it can never strip `.is-visible` from
+// `.reveal` sections. Section visibility and language are fully
+// independent state. .logo and .status-badge no longer carry
+// data-i18n (see index.html), so they sit outside this effect
+// entirely — the badge gets its own sweep cue instead (see the
+// lang-btn click handler below).
 const GLITCH_OUT_MS = 380;
+const GLITCH_OUT_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)'; // fast accelerate — snappy dissolve
 
 function applyLang(lang) {
   currentLang = lang;
@@ -182,19 +184,21 @@ function applyLang(lang) {
   }
 
   elements.forEach((el) => {
-    el.style.transition = `opacity ${GLITCH_OUT_MS}ms ease, filter ${GLITCH_OUT_MS}ms ease`;
+    el.style.transition = `opacity ${GLITCH_OUT_MS}ms ${GLITCH_OUT_EASE}, filter ${GLITCH_OUT_MS}ms ${GLITCH_OUT_EASE}, transform ${GLITCH_OUT_MS}ms ${GLITCH_OUT_EASE}`;
     el.style.opacity = '0.1';
     el.style.filter = 'blur(2px)';
+    el.style.transform = 'translateY(2px)';
   });
 
   setTimeout(() => {
     elements.forEach((el) => {
       const key = el.getAttribute('data-i18n');
       if (translations[lang][key]) el.textContent = translations[lang][key];
-      // Hand back to the slow luxe easing declared in CSS (~450ms) for the settle-in.
+      // Hand back to the slow luxe easing declared in CSS (550ms) for the settle-in.
       el.style.transition = '';
       el.style.opacity = '1';
       el.style.filter = 'blur(0px)';
+      el.style.transform = 'translateY(0)';
     });
   }, GLITCH_OUT_MS);
 }
@@ -363,12 +367,19 @@ function closeChat() {
 
 function toggleChat() { isOpen ? closeChat() : openChat(); }
 
-// Stage 11/13: "Дивитись демо" — forcefully opens the widget (setting
-// .is-open synchronously via openChat, regardless of current isOpen
-// state) and simulates a live demo message instead of just greeting
-// the user like a normal open.
+// Stage 11/13/14: "Дивитись демо" — forcefully opens the widget (setting
+// .is-open synchronously via openChat) and simulates a live demo message
+// instead of just greeting the user like a normal open.
+// Stage 14: if the widget is already open, don't re-run the demo — just
+// bring focus back to it, so repeated clicks never queue duplicate
+// demo_greeting messages.
 function startDemo() {
-  openChat(); // always runs — sets widget/fab .is-open + isOpen=true synchronously
+  if (isOpen) {
+    inputEl.focus();
+    scrollToBottom();
+    return;
+  }
+  openChat(); // sets widget/fab .is-open + isOpen=true synchronously
   setTimeout(() => {
     addMessage('bot', translations[currentLang].demo_greeting);
   }, 500);
@@ -450,14 +461,20 @@ inputEl.addEventListener('keydown', (e) => {
 });
 sendBtn.addEventListener('click', sendMessage);
 if (suggestionsEl) suggestionsEl.addEventListener('click', handleSuggestion);
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen) closeChat(); });
-document.addEventListener('click', (e) => {
-  if (isOpen && !widget.contains(e.target) && !fab.contains(e.target)) closeChat();
-});
-
 // CTA buttons
 const demoBtn = document.getElementById('demo-cta-btn');
 if (demoBtn) demoBtn.addEventListener('click', startDemo);
+
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen) closeChat(); });
+// Stage 14: root-cause fix — this used to fire on the SAME click that
+// startDemo() had just used to open the widget (demo-cta-btn sits
+// outside both `widget` and `fab`), instantly closing it again before
+// the user ever saw it open. Excluding demoBtn fixes it at the source.
+document.addEventListener('click', (e) => {
+  if (isOpen && !widget.contains(e.target) && !fab.contains(e.target) && !(demoBtn && demoBtn.contains(e.target))) {
+    closeChat();
+  }
+});
 
 (function init() {
   checkServerStatus();
