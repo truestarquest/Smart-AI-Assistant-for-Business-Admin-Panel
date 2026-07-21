@@ -358,6 +358,22 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
 .pricing-features li { color: var(--slate-fog); font-size: 15px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 8px; }
 .pricing-features li::before { content: '✓'; color: var(--aurora-cyan); font-weight: bold; }
 
+/* Phase 1: pricing CTA buttons */
+.pricing-cta {
+  margin-top: 24px; width: 100%;
+  font-family: var(--font-display); font-size: 15px; font-weight: 600;
+  padding: 12px 24px; border-radius: 100px; cursor: pointer;
+  background: transparent; color: var(--glacier-ice);
+  border: 1px solid var(--glass-border);
+  transition: transform 0.35s var(--ease-luxe), border-color 0.35s var(--ease-luxe), background 0.35s var(--ease-luxe);
+}
+.pricing-cta:hover { border-color: var(--glacier-mist); background: var(--glass-fill); transform: translateY(-2px); }
+.pricing-cta--primary {
+  background: linear-gradient(135deg, var(--glacier-mist), var(--aurora-cyan));
+  color: var(--lagoon-deep); border: none;
+}
+.pricing-cta--primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(69, 199, 194, 0.35); }
+
 /* 1.25s per breath x 2 iterations = 2.5s total, symmetric ease so it
    feels like slow inhale/exhale rather than a hard on/off pulse. */
 .pricing-card.pulse-highlight { animation: proPulse 1.25s cubic-bezier(0.45, 0, 0.55, 1) 2; }
@@ -377,8 +393,25 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
 .testi-author { color: var(--aurora-cyan); font-weight: 600; font-size: 14px; }
 
 .faq-list { display: flex; flex-direction: column; gap: 16px; max-width: 800px; margin: 0 auto; }
-.faq-item h4 { font-family: var(--font-display); font-size: 18px; color: var(--glacier-ice); margin: 0 0 12px; }
-.faq-item p { color: var(--slate-fog); font-size: 15px; line-height: 1.6; margin: 0; }
+.faq-item { padding: 0; overflow: hidden; }
+.faq-question {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: none; border: none; cursor: pointer; text-align: left;
+  padding: 24px 28px; margin: 0;
+  font-family: var(--font-display); font-size: 18px; color: var(--glacier-ice);
+}
+.faq-chevron {
+  flex-shrink: 0; width: 20px; height: 20px; color: var(--slate-fog);
+  transition: transform 0.4s var(--ease-luxe);
+}
+.faq-item.faq-open .faq-chevron { transform: rotate(180deg); color: var(--aurora-cyan); }
+.faq-answer {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.45s var(--ease-luxe), opacity 0.4s var(--ease-luxe);
+  opacity: 0;
+}
+.faq-item.faq-open .faq-answer { opacity: 1; }
+.faq-answer p { color: var(--slate-fog); font-size: 15px; line-height: 1.6; margin: 0; padding: 0 28px 24px; }
 
 .main-footer {
   position: relative; z-index: 1; text-align: center; padding: 40px 24px;
