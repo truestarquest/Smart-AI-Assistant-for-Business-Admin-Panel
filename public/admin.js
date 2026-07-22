@@ -17,7 +17,7 @@ const USER_FIELDS = [
   { key: 'email', label: 'Email',  type: 'email', required: false },
 ];
 
-let adminKey = localStorage.getItem(STORAGE_KEY) || '';
+let adminKey = sessionStorage.getItem(STORAGE_KEY) || '';
 let currentSessionId = null;
 let editingUserId = null;
 
@@ -85,7 +85,7 @@ async function tryLogin(key) {
   adminKey = key;
   try {
     await apiFetch('/admin/stats');
-    localStorage.setItem(STORAGE_KEY, key);
+    sessionStorage.setItem(STORAGE_KEY, key);
     showApp();
   } catch (err) {
     adminKey = '';
@@ -106,7 +106,7 @@ loginForm.addEventListener('submit', (e) => {
 
 logoutBtn.addEventListener('click', () => {
   adminKey = '';
-  localStorage.removeItem(STORAGE_KEY);
+  sessionStorage.removeItem(STORAGE_KEY);
   appView.hidden = true;
   loginView.hidden = false;
   document.getElementById('admin-key').value = '';
@@ -257,7 +257,7 @@ function renderSessionList(container, sessions, clickable = true) {
         <span class="session-id">${escapeHtml(id)}</span>
         ${count !== '' ? `<span class="session-count">${escapeHtml(String(count))}</span>` : ''}
       </div>
-      ${lastMessageText ? `<span class="session-preview">${escapeHtml(lastMessageText)}</span>` : ''}
+      ${lastMessageText ? `<span class="session-preview">${renderPreview(lastMessageText)}</span>` : ''}
       ${time ? `<span class="session-time">${formatTime(time)}</span>` : ''}
     `;
     if (clickable) {
@@ -268,11 +268,14 @@ function renderSessionList(container, sessions, clickable = true) {
 }
 
 async function loadSessions() {
+  const container = document.getElementById('session-list');
+  container.innerHTML = '<div class="empty-state"><p>Завантаження…</p></div>';
   try {
     const json = await apiFetch('/admin/sessions');
     const sessions = unwrapArray(json);
-    renderSessionList(document.getElementById('session-list'), sessions, true);
+    renderSessionList(container, sessions, true);
   } catch (err) {
+    container.innerHTML = `<div class="empty-state"><p>Помилка завантаження: ${escapeHtml(err.message)}</p></div>`;
     showToast(err.message, 'error');
   }
 }
@@ -304,7 +307,8 @@ async function selectSession(sessionId, rowEl) {
 
       const bubble = document.createElement('div');
       bubble.className = `msg ${role === 'user' ? 'msg-user' : 'msg-bot'}`;
-      bubble.innerHTML = `${escapeHtml(text)}${time ? `<span class="msg-time">${formatTime(time)}</span>` : ''}`;
+      const bodyHtml = role === 'user' ? renderUserText(text) : renderBotText(text);
+      bubble.innerHTML = `${bodyHtml}${time ? `<span class="msg-time">${formatTime(time)}</span>` : ''}`;
       thread.appendChild(bubble);
     });
     thread.scrollTop = thread.scrollHeight;
@@ -317,11 +321,14 @@ async function selectSession(sessionId, rowEl) {
    USERS (CRUD)
    ============================================================ */
 async function loadUsers() {
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = '<tr><td colspan="99" class="muted">Завантаження…</td></tr>';
   try {
     const json = await apiFetch('/users');
     const users = unwrapArray(json);
     renderUsersTable(users);
   } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="99" class="muted">Помилка завантаження: ${escapeHtml(err.message)}</td></tr>`;
     showToast(err.message, 'error');
   }
 }
@@ -439,6 +446,81 @@ userForm.addEventListener('submit', async (e) => {
     showToast(err.message, 'error');
   }
 });
+
+/* ============================================================
+   TEXT RENDERING — clean previews + safe formatting
+   ------------------------------------------------------------
+   Session previews are one-line summaries: any HTML tags or
+   markdown emphasis markers in the raw text should be stripped
+   entirely (not just escaped — escaped tags still show up as
+   ugly literal "<b>" clutter in a preview line).
+
+   Full thread messages are different: the bot's own replies use
+   a tiny set of formatting tags (the same ones the public chat
+   widget supports — <b> <i> <code> <pre>), and it's genuinely
+   useful for an admin to see that formatting when reading a
+   transcript. So thread rendering allows exactly that fixed
+   whitelist through, nothing else. User-typed messages are NEVER
+   given that treatment — customer input is always fully escaped,
+   since a visitor could otherwise type raw HTML/script tags into
+   the chat and have them execute in the admin's authenticated
+   session the moment someone opens that transcript.
+   ============================================================ */
+const SAFE_INLINE_TAGS = ['b', 'strong', 'i', 'em', 'code', 'pre'];
+
+function stripToPlainText(value) {
+  if (!value) return '';
+  return String(value)
+    .replace(/<[^>]*>/g, ' ')            // strip HTML tags entirely
+    .replace(/\*\*(.*?)\*\*/g, '$1')     // markdown bold
+    .replace(/`{1,3}([^`]*)`{1,3}/g, '$1') // inline/code fences
+    .replace(/\*(.*?)\*/g, '$1')         // markdown italic / stray bullet markers
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Heuristic: a string that's mostly literal "?" characters is almost
+ *  always mojibake from a charset mismatch at write-time (bytes already
+ *  replaced with 0x3F before we ever received them) — not something we
+ *  can recover client-side. Flag it instead of showing a wall of "??????". */
+function isLikelyMojibake(value) {
+  if (!value) return false;
+  const text = String(value).trim();
+  if (text.length < 6) return false;
+  const qMarks = (text.match(/\?/g) || []).length;
+  return qMarks / text.length > 0.4;
+}
+
+const ENCODING_WARNING =
+  '<span class="encoding-warn" title="Текст, ймовірно, збережено з пошкодженим кодуванням на сервері (не виправити на клієнті)">⚠ пошкоджене кодування</span>';
+
+/** One-line, fully plain-text preview for session lists. */
+function renderPreview(value) {
+  const plain = stripToPlainText(value);
+  if (isLikelyMojibake(plain)) return ENCODING_WARNING;
+  return escapeHtml(plain);
+}
+
+/** Bot message in the full thread view: escape everything, then
+ *  re-open only the exact whitelisted tags (no attributes possible —
+ *  escapeHtml already neutralized anything with extra content inside
+ *  the brackets, so only a bare "<b>"/"</b>" etc. can ever match). */
+function renderBotText(value) {
+  if (isLikelyMojibake(value)) return ENCODING_WARNING;
+  let escaped = escapeHtml(value);
+  SAFE_INLINE_TAGS.forEach((tag) => {
+    escaped = escaped
+      .replace(new RegExp(`&lt;${tag}&gt;`, 'g'), `<${tag}>`)
+      .replace(new RegExp(`&lt;/${tag}&gt;`, 'g'), `</${tag}>`);
+  });
+  return escaped;
+}
+
+/** User-typed message: always fully escaped, no exceptions. */
+function renderUserText(value) {
+  if (isLikelyMojibake(value)) return ENCODING_WARNING;
+  return escapeHtml(value);
+}
 
 /* ============================================================
    UTIL
