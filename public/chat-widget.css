@@ -38,6 +38,15 @@
 
 * { box-sizing: border-box; }
 
+/* Stage 16: brand-colored keyboard focus ring. Sighted mouse users see
+   nothing extra; keyboard/switch users get a clear, on-brand cyan ring
+   instead of the browser's default (often clashing) blue outline. */
+:focus-visible {
+  outline: 2px solid var(--aurora-cyan);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -231,7 +240,20 @@ html, body {
   font-family: var(--font-heading);
   font-size: clamp(30px, 5vw, 52px);
   font-weight: 700; line-height: 1.15;
-  margin: 0 0 20px; color: var(--frost-white);
+  margin: 0 0 20px;
+  color: var(--frost-white); /* fallback for browsers without background-clip: text */
+  background: linear-gradient(100deg, var(--frost-white) 30%, var(--glacier-mist) 48%, var(--frost-white) 66%);
+  background-size: 220% auto;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: titleShimmer 7s ease-in-out infinite;
+}
+@keyframes titleShimmer {
+  0%   { background-position: 220% 0; }
+  100% { background-position: -220% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-title { animation: none; background-position: 0 0; }
 }
 .hero-subtitle {
   font-size: 17px; line-height: 1.6; color: var(--slate-fog);
@@ -309,6 +331,13 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
 }
+/* Cascading stagger: each card reveals slightly after the previous
+   one instead of all four popping in at once. Pure transition-delay
+   on the existing .reveal mechanism — no extra JS, no extra cost. */
+.features-grid .feature-card:nth-child(1) { transition-delay: 0s; }
+.features-grid .feature-card:nth-child(2) { transition-delay: 0.08s; }
+.features-grid .feature-card:nth-child(3) { transition-delay: 0.16s; }
+.features-grid .feature-card:nth-child(4) { transition-delay: 0.24s; }
 /* Stage 13: no card-specific hover here anymore — the shared
    .glass-panel::before interior glow (opacity-only, no transform)
    handles the hover state for feature cards. */
@@ -328,7 +357,7 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
   will-change: transform;
 }
 .step:hover { border-color: var(--glass-border); transform: translateY(-4px); }
-.step-number { font-family: var(--font-heading); font-size: 44px; font-weight: 700; color: var(--glass-border); margin-bottom: 16px; }
+.step-number { font-family: var(--font-heading); font-size: 44px; font-weight: 700; color: rgba(127, 216, 204, 0.4); margin-bottom: 16px; }
 .step h4 { font-size: 20px; color: var(--frost-white); margin: 0 0 12px; }
 .step p { color: var(--slate-fog); font-size: 15px; max-width: 380px; }
 
@@ -543,10 +572,13 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
   font-family: var(--font-body); font-size: 14px; line-height: 1.4;
   color: var(--frost-white); background: var(--glass-fill-soft);
   border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
-  padding: 11px 14px; outline: none; transition: border-color 0.2s ease;
+  padding: 11px 14px; transition: border-color 0.2s ease;
 }
 .chat-input::placeholder { color: var(--slate-fog); }
-.chat-input:focus { border-color: var(--glacier-mist); }
+.chat-input:focus { border-color: var(--glacier-mist); outline: none; }
+/* Keyboard users still get a visible ring — only mouse-click focus
+   stays outline-free (handled by the rule above). */
+.chat-input:focus-visible { outline: 2px solid var(--aurora-cyan); outline-offset: 1px; }
 
 .chat-send-btn {
   flex-shrink: 0; width: 42px; height: 42px; border-radius: var(--radius-sm); border: none;
