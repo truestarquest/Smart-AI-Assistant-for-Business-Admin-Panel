@@ -1,23 +1,30 @@
 :root {
-  --bg-base: #080a10;
-  --bg-elevated: #0d1017;
-  --glass: rgba(255, 255, 255, 0.04);
-  --glass-strong: rgba(255, 255, 255, 0.065);
-  --glass-border: rgba(255, 255, 255, 0.09);
-  --cyan: #4cc9f0;
-  --violet: #8b5cf6;
+  --bg-base: #071c2c;       /* was #080a10 — now Aegis lagoon-deep */
+  --bg-elevated: #0f2f42;   /* was #0d1017 — now Aegis lagoon-mid */
+  --glass: rgba(191, 234, 227, 0.06);
+  --glass-strong: rgba(191, 234, 227, 0.1);
+  --glass-border: rgba(191, 234, 227, 0.16);
+  --cyan: #45c7c2;          /* aurora-cyan, from the landing palette */
+  --violet: #7fd8cc;        /* glacier-mist — Aegis has no purple accent, so
+                                the second gradient stop becomes the site's
+                                own teal secondary instead of introducing a
+                                new hue nobody else on the site uses */
   --gradient: linear-gradient(135deg, var(--cyan), var(--violet));
-  --text: #e8ebf3;
-  --text-dim: #8891a7;
-  --text-faint: #565d70;
-  --danger: #f87171;
-  --success: #34d399;
-  --radius-lg: 20px;
-  --radius-md: 14px;
-  --radius-sm: 9px;
+  --text: #f2fbfa;
+  --text-dim: #86a2ad;
+  --text-faint: #5c7681;
+  --danger: #e2836f;        /* Aegis danger-coral, matches the landing's own error tone */
+  --success: #7fd8cc;       /* glacier-mist doubles as "online/success", same
+                                semantic the landing already uses for its
+                                status dots */
+  --radius-lg: 26px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
   --font-display: 'Space Grotesk', sans-serif;
+  --font-heading: 'Unbounded', 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --ease-luxe: cubic-bezier(0.16, 1, 0.3, 1); /* same premium easing as the landing page */
 }
 
 * { box-sizing: border-box; }
@@ -37,8 +44,8 @@ html, body {
 
 body {
   background-image:
-    radial-gradient(circle at 15% 0%, rgba(76, 201, 240, 0.07), transparent 45%),
-    radial-gradient(circle at 85% 100%, rgba(139, 92, 246, 0.07), transparent 45%);
+    radial-gradient(circle at 15% 0%, rgba(69, 199, 194, 0.07), transparent 45%),
+    radial-gradient(circle at 85% 100%, rgba(127, 216, 204, 0.07), transparent 45%);
   background-attachment: fixed;
 }
 
@@ -57,7 +64,8 @@ button { cursor: pointer; }
   }
 }
 
-h1, h2, h3 { font-family: var(--font-display); margin: 0; letter-spacing: -0.01em; }
+h1 { font-family: var(--font-heading); margin: 0; letter-spacing: -0.01em; }
+h2, h3 { font-family: var(--font-display); margin: 0; letter-spacing: -0.01em; }
 .muted { color: var(--text-dim); font-size: 13px; }
 
 /* ============ LOGIN ============ */
@@ -75,10 +83,11 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; letter-spacing: -0.01e
   position: absolute;
   inset: -20%;
   background:
-    radial-gradient(circle at 30% 30%, rgba(76, 201, 240, 0.12), transparent 40%),
-    radial-gradient(circle at 70% 70%, rgba(139, 92, 246, 0.14), transparent 40%);
+    radial-gradient(circle at 30% 30%, rgba(69, 199, 194, 0.12), transparent 40%),
+    radial-gradient(circle at 70% 70%, rgba(127, 216, 204, 0.14), transparent 40%);
   filter: blur(40px);
   animation: driftAmbient 18s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
 @keyframes driftAmbient {
@@ -98,7 +107,7 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; letter-spacing: -0.01e
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   box-shadow: 0 30px 80px -30px rgba(0,0,0,0.6);
-  animation: cardRise 0.5s cubic-bezier(.22,1,.36,1);
+  animation: cardRise 0.5s var(--ease-luxe);
 }
 
 @keyframes cardRise {
@@ -147,7 +156,7 @@ input[type="password"], input[type="text"], input[type="email"], select {
   transition: border-color .15s ease, background .15s ease;
 }
 input:focus, select:focus {
-  border-color: rgba(76, 201, 240, 0.5);
+  border-color: rgba(69, 199, 194, 0.5);
   background: rgba(255,255,255,0.05);
 }
 input::placeholder { color: var(--text-faint); }
@@ -159,13 +168,14 @@ input::placeholder { color: var(--text-faint); }
   font-size: 14px;
   font-weight: 600;
   transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  will-change: transform;
 }
 .btn-primary {
   background: var(--gradient);
-  color: #060810;
-  box-shadow: 0 8px 24px -8px rgba(139, 92, 246, 0.55);
+  color: var(--bg-base);
+  box-shadow: 0 8px 24px -8px rgba(127, 216, 204, 0.55);
 }
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 28px -8px rgba(139, 92, 246, 0.7); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 28px -8px rgba(127, 216, 204, 0.7); }
 .btn-primary:active { transform: translateY(0); }
 .btn-block { width: 100%; margin-top: 4px; }
 .btn.small { padding: 7px 12px; font-size: 12.5px; }
@@ -179,7 +189,7 @@ input::placeholder { color: var(--text-faint); }
   font-size: 13px;
   transition: border-color .15s ease, color .15s ease;
 }
-.btn-ghost:hover { border-color: rgba(76,201,240,0.4); color: var(--text); }
+.btn-ghost:hover { border-color: rgba(69, 199, 194,0.4); color: var(--text); }
 .btn-ghost.small { padding: 6px 10px; font-size: 12px; }
 
 .login-error {
@@ -237,9 +247,9 @@ input::placeholder { color: var(--text-faint); }
 .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
 .nav-item:hover { background: var(--glass); color: var(--text); }
 .nav-item.active {
-  background: linear-gradient(135deg, rgba(76,201,240,0.12), rgba(139,92,246,0.12));
+  background: linear-gradient(135deg, rgba(69, 199, 194,0.12), rgba(127, 216, 204,0.12));
   color: var(--text);
-  box-shadow: inset 0 0 0 1px rgba(76,201,240,0.2);
+  box-shadow: inset 0 0 0 1px rgba(69, 199, 194,0.2);
 }
 
 .sidebar-footer {
@@ -253,7 +263,7 @@ input::placeholder { color: var(--text-faint); }
 .pulse-dot {
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--text-faint);
-  box-shadow: 0 0 0 rgba(52, 211, 153, 0);
+  box-shadow: 0 0 0 rgba(127, 216, 204, 0);
 }
 .pulse-dot.online {
   background: var(--success);
@@ -261,8 +271,8 @@ input::placeholder { color: var(--text-faint); }
 }
 .pulse-dot.offline { background: var(--danger); }
 @keyframes pulseDot {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.5); }
-  50% { box-shadow: 0 0 0 5px rgba(52,211,153,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(127, 216, 204,0.5); }
+  50% { box-shadow: 0 0 0 5px rgba(127, 216, 204,0); }
 }
 
 .main { display: flex; flex-direction: column; min-width: 0; }
@@ -302,8 +312,9 @@ input::placeholder { color: var(--text-faint); }
   backdrop-filter: blur(18px);
   overflow: hidden;
   transition: transform .2s ease, border-color .2s ease;
+  will-change: transform;
 }
-.stat-card:hover { transform: translateY(-3px); border-color: rgba(76,201,240,0.3); }
+.stat-card:hover { transform: translateY(-3px); border-color: rgba(69, 199, 194,0.3); }
 .stat-card::before {
   content: '';
   position: absolute;
@@ -376,14 +387,14 @@ input::placeholder { color: var(--text-faint); }
   transition: background .15s ease;
 }
 .session-row:hover { background: rgba(255,255,255,0.03); }
-.session-row.active { background: linear-gradient(90deg, rgba(76,201,240,0.1), transparent); border-left: 2px solid var(--cyan); }
+.session-row.active { background: linear-gradient(90deg, rgba(69, 199, 194,0.1), transparent); border-left: 2px solid var(--cyan); }
 .session-row-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .session-id { font-family: var(--font-mono); font-size: 12.5px; color: var(--text); }
 .session-count {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--cyan);
-  background: rgba(76,201,240,0.1);
+  background: rgba(69, 199, 194,0.1);
   padding: 2px 7px;
   border-radius: 20px;
 }
@@ -396,13 +407,23 @@ input::placeholder { color: var(--text-faint); }
 }
 .session-time { font-size: 11px; color: var(--text-faint); font-family: var(--font-mono); }
 
+/* Shown instead of a wall of "??????" when a message's raw text looks
+   like it was already corrupted (charset mismatch) before it reached us. */
+.encoding-warn {
+  color: var(--danger);
+  font-size: 12px;
+  font-style: italic;
+  opacity: 0.85;
+  cursor: help;
+}
+
 /* ---- thread / chat bubbles ---- */
 .thread { padding: 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; }
 .msg { max-width: 74%; padding: 11px 15px; border-radius: 14px; font-size: 13.5px; line-height: 1.5; }
 .msg-user {
   align-self: flex-end;
-  background: linear-gradient(135deg, rgba(76,201,240,0.18), rgba(139,92,246,0.18));
-  border: 1px solid rgba(76,201,240,0.2);
+  background: linear-gradient(135deg, rgba(69, 199, 194,0.18), rgba(127, 216, 204,0.18));
+  border: 1px solid rgba(69, 199, 194,0.2);
   border-bottom-right-radius: 4px;
 }
 .msg-bot {
@@ -449,8 +470,8 @@ input::placeholder { color: var(--text-faint); }
   font-size: 12px;
   transition: color .15s ease, border-color .15s ease;
 }
-.icon-btn:hover { color: var(--cyan); border-color: rgba(76,201,240,0.4); }
-.icon-btn.danger:hover { color: var(--danger); border-color: rgba(248,113,113,0.4); }
+.icon-btn:hover { color: var(--cyan); border-color: rgba(69, 199, 194,0.4); }
+.icon-btn.danger:hover { color: var(--danger); border-color: rgba(226, 131, 111,0.4); }
 
 /* ---- modal ---- */
 .modal-overlay {
@@ -494,8 +515,8 @@ input::placeholder { color: var(--text-faint); }
   z-index: 100;
   animation: toastIn .25s ease;
 }
-.toast.error { border-color: rgba(248,113,113,0.4); color: var(--danger); }
-.toast.success { border-color: rgba(52,211,153,0.4); color: var(--success); }
+.toast.error { border-color: rgba(226, 131, 111,0.4); color: var(--danger); }
+.toast.success { border-color: rgba(127, 216, 204,0.4); color: var(--success); }
 @keyframes toastIn {
   from { opacity: 0; transform: translate(-50%, 8px); }
   to   { opacity: 1; transform: translate(-50%, 0); }
@@ -517,4 +538,40 @@ input::placeholder { color: var(--text-faint); }
   .topbar .waveform { display: none; }
   .content { padding: 20px; }
   .split { grid-template-columns: 1fr; }
+}
+
+/* =========================================================
+   Mobile performance mode — same fix as chat-widget.css.
+   The admin panel has the identical problem: backdrop-filter
+   blur on .login-card/.stat-card/.panel/.modal-overlay, plus an
+   animated, blurred ambient glow behind the login screen. On a
+   budget phone this panel would stutter just as badly as the
+   landing page did before that fix.
+   ========================================================= */
+@media (max-width: 767px) {
+  .login-card,
+  .stat-card,
+  .panel {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(11, 33, 49, 0.92);
+  }
+
+  .modal-overlay {
+    backdrop-filter: none;
+    background: rgba(4, 5, 9, 0.85);
+  }
+
+  .login-ambient {
+    animation: none;
+    filter: none;
+    background: radial-gradient(circle at 50% 30%, rgba(69, 199, 194, 0.14), transparent 70%);
+  }
+
+  /* Decorative per-card corner glow — static blur, still a paint
+     cost on every card while scrolling the overview grid. */
+  .stat-card::before {
+    filter: none;
+    opacity: 0.12;
+  }
 }
