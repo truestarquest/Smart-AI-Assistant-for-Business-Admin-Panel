@@ -12,7 +12,11 @@
   --gradient: linear-gradient(135deg, var(--cyan), var(--violet));
   --text: #f2fbfa;
   --text-dim: #86a2ad;
-  --text-faint: #5c7681;
+  --text-faint: #829ca7;  /* was #5c7681 — only ~2.9:1 on --bg-elevated,
+                              fails WCAG AA (4.5:1). This shade clears
+                              ~4.8:1 on --bg-elevated and ~6.0:1 on
+                              --bg-base, used by .login-hint, .stat-foot,
+                              .session-time, .msg-time, .empty-state, etc. */
   --danger: #e2836f;        /* Aegis danger-coral, matches the landing's own error tone */
   --success: #7fd8cc;       /* glacier-mist doubles as "online/success", same
                                 semantic the landing already uses for its
@@ -532,7 +536,21 @@ input::placeholder { color: var(--text-faint); }
     position: sticky; top: 0; z-index: 10;
   }
   .sidebar-nav { flex-direction: row; flex: none; }
-  .nav-item span { display: none; }
+  /* Was `display: none` — that strips the label from the accessibility
+     tree too, leaving icon-only buttons with no accessible name
+     (Lighthouse: "Buttons do not have an accessible name"). Visually
+     hide it instead so screen readers still announce it. */
+  .nav-item span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
   .sidebar-footer { flex-direction: row; margin-left: auto; border: none; padding: 0; }
   .topbar { padding: 18px 20px; }
   .topbar .waveform { display: none; }
