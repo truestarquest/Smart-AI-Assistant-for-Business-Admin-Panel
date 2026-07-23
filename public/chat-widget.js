@@ -487,9 +487,51 @@ function startDemo() {
   }, 500);
 }
 
+// =========================================================
+// Client-side spam / ASCII-art guard
+// ---------------------------------------------------------
+// Blocks obvious "picture" spam (Braille-pattern art, box-drawing
+// ASCII art, character floods) BEFORE it ever reaches addMessage()
+// or the API — so we don't render giant glyph blocks in the thread
+// and don't burn a model call on something that was never a real
+// question. This runs client-side only: it's a first line of
+// defense against casual trolling, not a substitute for real
+// server-side validation/rate-limiting (which we don't control
+// from these front-end files).
+// =========================================================
+const SPAM_MAX_LENGTH = 500;
+const SPAM_MAX_NEWLINES = 4;
+const BRAILLE_ART_RE = /[\u2800-\u28FF]/;           // Braille Patterns block — the classic "Shrek ASCII art" trick
+const BOX_ART_RE = /[\u2500-\u25FF]/;               // Box Drawing / Block Elements / Geometric Shapes — the other common ASCII-art alphabet
+const CHAR_FLOOD_RE = /(.)\1{29,}/;                 // same character repeated 30+ times in a row
+
+function isSpamInput(text) {
+  if (!text) return false;
+  if (text.length > SPAM_MAX_LENGTH) return true;
+
+  const newlineCount = (text.match(/\n/g) || []).length;
+  if (newlineCount > SPAM_MAX_NEWLINES) return true;
+
+  if (BRAILLE_ART_RE.test(text)) return true;
+  // Box-drawing chars alone show up in legitimate messages sometimes (a stray "─"),
+  // so only flag them once there's real multi-line "drawing" structure behind them.
+  if (BOX_ART_RE.test(text) && newlineCount > 2) return true;
+
+  if (CHAR_FLOOD_RE.test(text)) return true;
+
+  return false;
+}
+
 async function sendMessage() {
   const text = inputEl.value.trim();
   if (!text || isLoading) return;
+
+  if (isSpamInput(text)) {
+    inputEl.value = '';
+    autoResize();
+    addMessage('bot', 'Повідомлення заблоковано: виявлено неприпустимий формат');
+    return;
+  }
 
   if (suggestionsEl) suggestionsEl.style.display = 'none';
 
