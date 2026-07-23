@@ -1,9 +1,10 @@
 'use strict';
 
-const express  = require('express');
-const mongoose = require('mongoose');
-const Message  = require('../models/Message');
-const User     = require('../models/User');
+const express   = require('express');
+const mongoose  = require('mongoose');
+const rateLimit = require('express-rate-limit');
+const Message   = require('../models/Message');
+const User      = require('../models/User');
 const { requireAdminKey } = require('../middleware/adminAuth');
 
 const router = express.Router();
@@ -16,13 +17,34 @@ function clampInt(value, { min, max, fallback }) {
   return Math.min(Math.max(n, min), max);
 }
 
+// The admin key is a single static secret checked on every request (no
+// login form, no lockout of its own) — that makes it brute-forceable by
+// just hammering any admin endpoint with guesses. This limiter runs
+// BEFORE requireAdminKey so failed guesses count against the same budget
+// as real traffic: 30 requests/15 min per IP is plenty for a human using
+// the dashboard, but makes guessing a secret key impractical.
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many admin requests. Please try again later.' },
+});
+router.use(adminLimiter);
+
 router.use(requireAdminKey);
 
 // GET /api/admin/messages — пагінація є, все ОК
 router.get('/messages', async (req, res) => {
   if (!isDbConnected()) return res.status(503).json({ success: false, message: 'Database is not connected' });
   try {
-    const { sessionId } = req.query;
+    // req.query.sessionId can arrive as a nested object (?sessionId[$ne]=1)
+    // since Express parses bracket-notation query strings into objects —
+    // that would let a caller smuggle a Mongo operator into the filter.
+    // express-mongo-sanitize (server.js) already strips the $ prefix
+    // globally, but forcing this to a plain string here is a second,
+    // narrow guarantee for this specific query.
+    const sessionId = typeof req.query.sessionId === 'string' ? req.query.sessionId : undefined;
     const limit = clampInt(req.query.limit, { min: 1, max: 100, fallback: 50 });
     const skip  = clampInt(req.query.skip,  { min: 0, max: Number.MAX_SAFE_INTEGER, fallback: 0 });
     const filter = sessionId ? { sessionId } : {};
