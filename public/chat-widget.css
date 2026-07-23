@@ -537,7 +537,16 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
   background: var(--glass-fill-soft); border: 1px solid var(--glass-border);
 }
 
-.message-bubble { position: relative; font-size: 14px; line-height: 1.55; padding: 10px 14px 20px; border-radius: var(--radius-sm); color: var(--frost-white); }
+.message-bubble {
+  position: relative; font-size: 14px; line-height: 1.55; padding: 10px 14px 20px;
+  border-radius: var(--radius-sm); color: var(--frost-white);
+  /* Defense-in-depth: the JS spam guard should catch Braille/box-drawing
+     "art" before it ever reaches the DOM, but this ensures layout never
+     depends on incidental browser line-breaking behavior for unusual
+     Unicode blocks — any long unbroken run of characters wraps instead
+     of overflowing the bubble. */
+  overflow-wrap: anywhere;
+}
 .message--bot .message-bubble { background: rgba(191, 234, 227, 0.08); border: 1px solid var(--glass-border); border-top-left-radius: 4px; }
 .message--user .message-bubble { background: linear-gradient(135deg, var(--glacier-mist), var(--aurora-cyan)); color: var(--lagoon-deep); border-top-right-radius: 4px; }
 
