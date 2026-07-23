@@ -8,6 +8,12 @@ const { requireAdminKey } = require('../middleware/adminAuth');
 const router = express.Router();
 
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
+const MAX_NAME_LENGTH  = 200;
+const MAX_EMAIL_LENGTH = 254; // RFC 5321 max mailbox length
+
+function isValidLength(value, max) {
+  return typeof value !== 'string' || value.length <= max;
+}
 
 function isDbConnected() {
   return mongoose.connection.readyState === 1;
@@ -81,6 +87,10 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Invalid email format' });
   }
 
+  if (!isValidLength(name, MAX_NAME_LENGTH) || !isValidLength(email, MAX_EMAIL_LENGTH)) {
+    return res.status(400).json({ success: false, message: 'Field is too long' });
+  }
+
   try {
     const user = await User.create({ name, email });
     res.status(201).json({ success: true, data: user });
@@ -105,6 +115,10 @@ router.patch('/:id', async (req, res) => {
 
   if (email !== undefined && !EMAIL_REGEX.test(email)) {
     return res.status(400).json({ success: false, message: 'Invalid email format' });
+  }
+
+  if (!isValidLength(name, MAX_NAME_LENGTH) || !isValidLength(email, MAX_EMAIL_LENGTH)) {
+    return res.status(400).json({ success: false, message: 'Field is too long' });
   }
 
   const updates = {};
