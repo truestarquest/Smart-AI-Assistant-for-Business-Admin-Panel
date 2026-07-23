@@ -53,6 +53,23 @@ router.post('/', chatLimiter, async (req, res) => {
     return res.status(400).json({ success: false, message: `Message is too long (max ${MAX_MESSAGE_LENGTH} characters)` });
   }
 
+  // The widget now always generates its own sessionId client-side (see
+  // chat-widget.js) and sends it on every request — there is no longer a
+  // legitimate case where a real visitor arrives here without one. The
+  // old `anon-${req.ip}` fallback existed to paper over that, but behind
+  // Render's proxy req.ip frequently resolved to the same value ("::1")
+  // for everyone, silently merging unrelated visitors into one
+  // conversation. Rather than keep a fallback that can cause that kind
+  // of silent data corruption, a missing sessionId is now a hard error:
+  // it means the request didn't come through the widget as expected
+  // (stale cached JS, a direct curl/Postman call, a broken integration),
+  // and it's better to surface that loudly than to guess.
+  if (typeof sessionId !== 'string' || !sessionId.trim()) {
+    return res.status(400).json({ success: false, message: 'Field "sessionId" is required' });
+  }
+
+  const resolvedSessionId = sessionId.trim().slice(0, 200);
+
   // Never trust the client: the widget's own escapeHtml only protects
   // rendering in that specific browser. A request sent straight to this
   // endpoint (Postman, curl, a script) skips the widget entirely, so
@@ -61,9 +78,6 @@ router.post('/', chatLimiter, async (req, res) => {
   // to the model means there's nothing dangerous in the database even if
   // some future render path forgets to escape it.
   const trimmedMessage = xss(message.trim(), { whiteList: {}, stripIgnoreTag: true, stripIgnoreTagBody: ['script'] });
-  const resolvedSessionId = (typeof sessionId === 'string' && sessionId.trim())
-    ? sessionId.trim().slice(0, 200)
-    : `anon-${req.ip}`;
 
   await saveMessage('user', trimmedMessage, resolvedSessionId);
 
