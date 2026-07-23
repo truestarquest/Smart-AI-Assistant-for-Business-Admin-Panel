@@ -18,8 +18,59 @@ let serverOnline = true; // optimistic default until the first real check resolv
 
 let isOpen    = false;
 let isLoading = false;
-let sessionId = sessionStorage.getItem('chat_session_id') || null;
 let greeted   = false; // has the opening bot message been shown yet
+
+// =========================================================
+// Session identity — client-owned, not IP-derived
+// ---------------------------------------------------------
+// Previously the widget waited for the backend to hand it a sessionId
+// (falling back to sessionStorage, which starts empty every tab). Behind
+// Render's proxy, req.ip resolved to "::1" for effectively everyone, so
+// the backend's `anon-${req.ip}` fallback merged unrelated visitors into
+// one conversation. Fix: the client is now the source of truth — it
+// mints its own id up front and sends it on every request, so the
+// backend never needs the IP fallback at all.
+//
+// localStorage (not sessionStorage) is intentional: a session should
+// survive a tab refresh/close, so a visitor who reopens the site an
+// hour later still lands in the same conversation instead of starting
+// a fresh one that fragments their history in the admin panel.
+// =========================================================
+const SESSION_STORAGE_KEY = 'aegis_chat_session_id';
+
+function generateSessionId() {
+  // Preferred path: built-in, collision-safe UUID.
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+    return window.crypto.randomUUID();
+  }
+  // Fallback for older browsers that have Web Crypto but not randomUUID.
+  if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+    const bytes = window.crypto.getRandomValues(new Uint8Array(16));
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  // Last-resort fallback for very old browsers — not cryptographically
+  // strong, but timestamp + two random segments makes collisions a
+  // non-issue for a chat-session id.
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+}
+
+function getOrCreateSessionId() {
+  try {
+    let id = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!id) {
+      id = generateSessionId();
+      localStorage.setItem(SESSION_STORAGE_KEY, id);
+    }
+    return id;
+  } catch {
+    // localStorage blocked (private mode, disabled storage, etc.) — fall
+    // back to an in-memory id so this tab's conversation still stays
+    // coherent for its own duration, even though it won't persist.
+    return generateSessionId();
+  }
+}
+
+let sessionId = getOrCreateSessionId();
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -556,9 +607,12 @@ async function sendMessage() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const data = await response.json();
-    if (data.sessionId) {
+    // Defensive sync only: we already sent our own sessionId above, so the
+    // backend shouldn't need to assign a new one. This just keeps storage
+    // consistent in case the backend ever normalizes/reissues an id.
+    if (data.sessionId && data.sessionId !== sessionId) {
       sessionId = data.sessionId;
-      sessionStorage.setItem('chat_session_id', sessionId);
+      try { localStorage.setItem(SESSION_STORAGE_KEY, sessionId); } catch { /* storage may be blocked */ }
     }
 
     const reply = data.reply || data.message || 'Відповідь отримана.';
