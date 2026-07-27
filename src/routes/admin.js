@@ -7,6 +7,7 @@ const Message   = require('../models/Message');
 const User      = require('../models/User');
 const { getSettings, saveSettings } = require('../models/Settings');
 const { requireAdminKey } = require('../middleware/adminAuth');
+const { sendWebhookRequest } = require('../services/openaiService');
 
 const router = express.Router();
 
@@ -124,22 +125,79 @@ router.get('/settings', async (req, res) => {
   }
 });
 
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
 // PUT /api/admin/settings
 router.put('/settings', async (req, res) => {
   if (!isDbConnected()) return res.status(503).json({ success: false, message: 'Database is not connected' });
-  const { knowledgeBase, tone } = req.body || {};
+  const { knowledgeBase, tone, schedule, webhookUrl } = req.body || {};
   if (typeof knowledgeBase !== 'undefined' && typeof knowledgeBase !== 'string') {
     return res.status(400).json({ success: false, message: 'knowledgeBase must be a string' });
   }
   if (typeof tone !== 'undefined' && !['business', 'friendly', 'sales'].includes(tone)) {
     return res.status(400).json({ success: false, message: 'tone must be one of: business, friendly, sales' });
   }
+  if (typeof webhookUrl !== 'undefined') {
+    if (typeof webhookUrl !== 'string') {
+      return res.status(400).json({ success: false, message: 'webhookUrl must be a string' });
+    }
+    if (webhookUrl && !/^https?:\/\//i.test(webhookUrl)) {
+      return res.status(400).json({ success: false, message: 'webhookUrl must start with http:// or https://' });
+    }
+  }
+  if (typeof schedule !== 'undefined') {
+    if (typeof schedule !== 'object' || schedule === null || Array.isArray(schedule)) {
+      return res.status(400).json({ success: false, message: 'schedule must be an object' });
+    }
+    const { enabled, from, to, weekdays } = schedule;
+    if (typeof enabled !== 'undefined' && typeof enabled !== 'boolean') {
+      return res.status(400).json({ success: false, message: 'schedule.enabled must be a boolean' });
+    }
+    if (typeof from !== 'undefined' && !TIME_RE.test(from)) {
+      return res.status(400).json({ success: false, message: 'schedule.from must be in HH:MM format' });
+    }
+    if (typeof to !== 'undefined' && !TIME_RE.test(to)) {
+      return res.status(400).json({ success: false, message: 'schedule.to must be in HH:MM format' });
+    }
+    if (typeof weekdays !== 'undefined' &&
+        (!Array.isArray(weekdays) || !weekdays.every((d) => Number.isInteger(d) && d >= 0 && d <= 6))) {
+      return res.status(400).json({ success: false, message: 'schedule.weekdays must be an array of integers 0-6' });
+    }
+  }
   try {
-    const updated = await saveSettings({ knowledgeBase, tone });
+    const updated = await saveSettings({ knowledgeBase, tone, schedule, webhookUrl });
     res.json({ success: true, data: updated });
   } catch (err) {
     console.error('[admin] Failed to save settings:', err.message);
     res.status(500).json({ success: false, message: 'Failed to save settings' });
+  }
+});
+
+// POST /api/admin/settings/webhook-test — реальний server-side POST на CRM
+// webhook (не client-side no-cors fetch, який завжди звітує "успіх"
+// незалежно від фактичної доставки).
+router.post('/settings/webhook-test', async (req, res) => {
+  const bodyUrl = typeof req.body?.url === 'string' ? req.body.url.trim() : '';
+  const targetUrl = bodyUrl || (await getSettings()).webhookUrl;
+  if (!targetUrl) {
+    return res.status(400).json({ success: false, message: 'Webhook URL is not configured' });
+  }
+  if (!/^https?:\/\//i.test(targetUrl)) {
+    return res.status(400).json({ success: false, message: 'webhookUrl must start with http:// or https://' });
+  }
+  try {
+    const result = await sendWebhookRequest(targetUrl, {
+      event: 'test',
+      source: 'aegis-admin',
+      sentAt: new Date().toISOString(),
+    });
+    if (!result.ok) {
+      return res.status(502).json({ success: false, message: `CRM responded with status ${result.status}` });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[admin] Webhook test failed:', err.message);
+    res.status(502).json({ success: false, message: err.message });
   }
 });
 
