@@ -85,6 +85,9 @@ const translations = {
     hero_subtitle: "Aegis — це не просто чат. Це автономна система, яка миттєво вступає в діалог, природно кваліфікує потреби відвідувачів, збирає контакти та бронює зустрічі. Поки ви відпочиваєте, Aegis працює на ваш бізнес.",
     btn_primary: "Інтегрувати Aegis",
     btn_secondary: "Дивитись демо",
+    btn_telegram: "Спробувати в Telegram",
+
+    hero_demo_label: "Aegis AI — приклад діалогу",
 
     feature1_title: "Автоматичне бронювання",
     feature1_desc: "Інтелектуальний підбір слотів. Aegis аналізує ваш розклад, пропонує клієнту зручний час та автоматично фіксує запис без участі менеджера.",
@@ -129,8 +132,13 @@ const translations = {
     testi_title: "Системи перевірені в бойових умовах.",
     testi_1_text: "\"Aegis повністю закрив нам питання з нічними клієнтами. 30% запитів прилітає після опівночі. Бот сам кваліфікує ліда, бере номер і записує в CRM. Зранку менеджери просто дзвонять гарячим клієнтам.\"",
     testi_1_author: "— Олександр, Власник AutoParts UA",
+    testi_1_badge: "Приклад кейсу · +30% лідів уночі",
     testi_2_text: "\"Інтеграція справді зайняла 2 хвилини. Найбільше вразило те, як бот переводить клієнта в Telegram (One-Time Links) — жодних втрат контактів, навіть якщо людина закрила вкладку браузера.\"",
     testi_2_author: "— Марина, СЕО BeautyHub",
+    testi_2_badge: "Приклад кейсу · 2 хв на інтеграцію",
+    testi_3_text: "\"Раніше пропускали дзвінки після 19:00 — тепер Aegis сам відповідає, записує на прийом і одразу підтверджує час. Адміністратору лишається тільки нагадати клієнту вранці.\"",
+    testi_3_author: "— Ігор, Власник DentalCare Studio",
+    testi_3_badge: "Приклад кейсу · +45% записів із сайту",
 
     faq_title: "Декодування невідомого.",
     faq_1_q: "Q: Чи потрібні навички програмування для налаштування?",
@@ -155,6 +163,9 @@ const translations = {
     hero_subtitle: "Aegis is more than a chat widget. It’s an autonomous system that engages visitors instantly, naturally qualifies their needs, captures contact info, and books appointments. While you rest, Aegis works for your business.",
     btn_primary: "Integrate Aegis",
     btn_secondary: "Watch Demo",
+    btn_telegram: "Try it on Telegram",
+
+    hero_demo_label: "Aegis AI — sample conversation",
 
     feature1_title: "Automated Booking",
     feature1_desc: "Intelligent slot matching. Aegis analyzes your schedule, proposes convenient times, and securely registers the appointment without human intervention.",
@@ -199,8 +210,13 @@ const translations = {
     testi_title: "Systems tested in combat conditions.",
     testi_1_text: "\"Aegis completely solved our after-hours support. 30% of inquiries hit after midnight. The bot qualifies the lead, takes the number, and logs it into our CRM. In the morning, our reps just call hot leads.\"",
     testi_1_author: "— Alexander, Owner of AutoParts UA",
+    testi_1_badge: "Example case · +30% leads at night",
     testi_2_text: "\"Integration really took 2 minutes. The most impressive part is how the bot transitions the client to Telegram via One-Time Links — zero lost contacts even if the user closes the browser tab.\"",
     testi_2_author: "— Marina, CEO of BeautyHub",
+    testi_2_badge: "Example case · 2-min integration",
+    testi_3_text: "\"We used to miss calls after 7 PM — now Aegis answers, books the appointment, and confirms the time on the spot. The front desk just sends a reminder in the morning.\"",
+    testi_3_author: "— Igor, Owner of DentalCare Studio",
+    testi_3_badge: "Example case · +45% bookings from the site",
 
     faq_title: "Decoding the Unknown.",
     faq_1_q: "Q: Do I need coding skills to set this up?",

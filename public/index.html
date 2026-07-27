@@ -46,6 +46,50 @@
   }
   </script>
 
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Чи потрібні навички програмування для налаштування?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Жодних. Ви просто додаєте скрипт на сайт, а базу знань (FAQ, прайси) заповнюєте звичайним текстом у зручній адмін-панелі."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Чи розуміє Aegis сленг та помилки в тексті?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Так. Нейромережа розпізнає контекст, ігнорує граматичні помилки та може спілкуватися як діловою мовою, так і більш вільно, дзеркалячи емоції вашого клієнта."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Що відбувається, якщо бот не знає відповіді?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Бот має вбудований запобіжник (Failsafe). Він ввічливо повідомить, що це питання краще обговорити зі спеціалістом, візьме контакти і миттєво відправить сповіщення вам у Telegram."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Aegis AI",
+    "url": "https://smart-ai-assistant-for-business-admin.onrender.com/",
+    "logo": "https://smart-ai-assistant-for-business-admin.onrender.com/favicon.svg",
+    "sameAs": ["https://t.me/aegis_biz_bot"]
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@600;700&family=Unbounded:wght@700&display=swap" rel="stylesheet" />
@@ -80,8 +124,21 @@
     <div class="hero-actions">
       <button class="btn-primary" id="integrate-btn" data-i18n="btn_primary">Інтегрувати Aegis</button>
       <button class="btn-secondary chat-opener" id="demo-cta-btn" data-i18n="btn_secondary">Дивитись демо</button>
+      <a class="btn-secondary" href="https://t.me/aegis_biz_bot" target="_blank" rel="noopener">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 6px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg><span data-i18n="btn_telegram">Спробувати в Telegram</span></a>
     </div>
   </main>
+
+  <!-- 1b. Live Demo (static, scripted preview — no backend) -->
+  <section class="hero-demo-section reveal">
+    <div class="hero-demo glass-panel">
+      <div class="hero-demo-header">
+        <span class="status-dot online"></span>
+        <span class="hero-demo-label" data-i18n="hero_demo_label">Aegis AI — приклад діалогу</span>
+      </div>
+      <div class="hero-demo-messages" id="hero-demo-messages"></div>
+    </div>
+  </section>
 
   <!-- 2. Features Grid -->
   <section class="features-section">
@@ -177,12 +234,34 @@
     <h2 class="section-title reveal" data-i18n="testi_title">Системи перевірені в бойових умовах.</h2>
     <div class="testi-grid">
       <div class="testi-card glass-panel reveal">
+        <div class="testi-top">
+          <div class="testi-avatar">О</div>
+          <div>
+            <div class="testi-author" data-i18n="testi_1_author">— Олександр, Власник AutoParts UA</div>
+            <span class="testi-badge" data-i18n="testi_1_badge">Приклад кейсу · +30% лідів уночі</span>
+          </div>
+        </div>
         <p class="testi-text" data-i18n="testi_1_text">"Aegis повністю закрив нам питання з нічними клієнтами. 30% запитів прилітає після опівночі. Бот сам кваліфікує ліда, бере номер і записує в CRM. Зранку менеджери просто дзвонять гарячим клієнтам."</p>
-        <div class="testi-author" data-i18n="testi_1_author">— Олександр, Власник AutoParts UA</div>
       </div>
       <div class="testi-card glass-panel reveal">
+        <div class="testi-top">
+          <div class="testi-avatar">М</div>
+          <div>
+            <div class="testi-author" data-i18n="testi_2_author">— Марина, СЕО BeautyHub</div>
+            <span class="testi-badge" data-i18n="testi_2_badge">Приклад кейсу · 2 хв на інтеграцію</span>
+          </div>
+        </div>
         <p class="testi-text" data-i18n="testi_2_text">"Інтеграція справді зайняла 2 хвилини. Найбільше вразило те, як бот переводить клієнта в Telegram (One-Time Links) — жодних втрат контактів, навіть якщо людина закрила вкладку браузера."</p>
-        <div class="testi-author" data-i18n="testi_2_author">— Марина, СЕО BeautyHub</div>
+      </div>
+      <div class="testi-card glass-panel reveal">
+        <div class="testi-top">
+          <div class="testi-avatar">І</div>
+          <div>
+            <div class="testi-author" data-i18n="testi_3_author">— Ігор, Власник DentalCare Studio</div>
+            <span class="testi-badge" data-i18n="testi_3_badge">Приклад кейсу · +45% записів із сайту</span>
+          </div>
+        </div>
+        <p class="testi-text" data-i18n="testi_3_text">"Раніше пропускали дзвінки після 19:00 — тепер Aegis сам відповідає, записує на прийом і одразу підтверджує час. Адміністратору лишається тільки нагадати клієнту вранці."</p>
       </div>
     </div>
   </section>
@@ -227,6 +306,15 @@
     <div class="footer-status">
       <span class="status-dot online pulse" id="footer-status-dot"></span>
       <span id="footer-status-text">All Systems Operational</span>
+    </div>
+    <div class="footer-telegram">
+      <a class="footer-tg-link" href="https://t.me/aegis_biz_bot" target="_blank" rel="noopener" aria-label="Aegis AI в Telegram">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        <span>@aegis_biz_bot</span>
+      </a>
+      <div class="footer-qr">
+        <img src="telegram-qr.svg" width="120" alt="QR-код: відкрити Aegis AI бота в Telegram" loading="lazy" />
+      </div>
     </div>
     <div class="footer-copy" data-i18n="footer_copy">© 2026 Aegis Systems. Всі права захищено.</div>
   </footer>
@@ -275,5 +363,6 @@
   </aside>
 
   <script src="chat-widget.js"></script>
+  <script src="hero-demo.js"></script>
 </body>
 </html>

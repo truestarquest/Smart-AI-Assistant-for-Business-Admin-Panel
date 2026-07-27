@@ -266,6 +266,7 @@ html, body {
   padding: 14px 28px; border-radius: 100px; cursor: pointer; border: none;
   transition: transform 0.4s var(--ease-luxe), box-shadow 0.4s var(--ease-luxe), background 0.4s var(--ease-luxe), border-color 0.4s var(--ease-luxe);
   will-change: transform;
+  text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
 }
 .btn-primary {
   background: linear-gradient(135deg, var(--glacier-mist), var(--aurora-cyan));
@@ -685,3 +686,60 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
     background: radial-gradient(circle at 50% 20%, rgba(69, 199, 194, 0.15), transparent 70%), #071c2c;
   }
 }
+
+/* =========================================================
+   Hero Demo Widget (static, scripted preview — no backend)
+   ========================================================= */
+
+.hero-demo-section { max-width: 480px; padding-top: 0; padding-bottom: 40px; }
+.hero-demo { padding: 20px; }
+.hero-demo-header {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 14px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.hero-demo-label { font-family: var(--font-display); font-size: 13px; font-weight: 600; color: var(--slate-fog); }
+.hero-demo-messages { display: flex; flex-direction: column; gap: 14px; min-height: 220px; }
+
+/* =========================================================
+   Testimonials — avatars, badges, mobile carousel
+   ========================================================= */
+
+.testi-card { display: flex; flex-direction: column; }
+.testi-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.testi-avatar {
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 16px;
+  color: var(--lagoon-deep);
+  background: linear-gradient(135deg, var(--glacier-mist), var(--aurora-cyan));
+}
+.testi-badge {
+  display: inline-block; margin-top: 4px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+  color: var(--glacier-ice); background: var(--glass-fill-soft);
+  border: 1px solid var(--glass-border); border-radius: 100px;
+  padding: 3px 10px;
+}
+
+@media (max-width: 767px) {
+  .testi-grid {
+    display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+    gap: 16px; padding-bottom: 8px; -webkit-overflow-scrolling: touch;
+  }
+  .testi-card { flex: 0 0 85%; scroll-snap-align: start; }
+}
+
+/* =========================================================
+   Telegram integration — footer icon + QR
+   ========================================================= */
+
+.footer-telegram { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 16px; }
+.footer-tg-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--glacier-ice); font-family: var(--font-display); font-size: 14px; font-weight: 600;
+  text-decoration: none; transition: color 0.2s ease;
+}
+.footer-tg-link:hover { color: var(--aurora-cyan); }
+.footer-tg-link svg { width: 18px; height: 18px; }
+.footer-qr img { display: block; width: 120px; height: auto; }
