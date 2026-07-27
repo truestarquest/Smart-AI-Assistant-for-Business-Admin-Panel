@@ -58,6 +58,77 @@ function getCurrentTime() {
   });
 }
 
+/* ===== WORKING SCHEDULE ===== */
+
+const WEEKDAY_MAP = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+/**
+ * Поточні день тижня (0=Нд..6=Сб) та час HH:MM у часовому поясі сервера.
+ * @returns {{weekday: number, hhmm: string}}
+ */
+function getZonedNow() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: process.env.TZ || 'Europe/Kyiv',
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    weekday: 'short',
+  }).formatToParts(new Date());
+  const map = {};
+  for (const p of parts) map[p.type] = p.value;
+  return { weekday: WEEKDAY_MAP[map.weekday], hhmm: `${map.hour}:${map.minute}` };
+}
+
+/**
+ * Чи бот зараз "у робочому часі" за налаштуваннями адміна.
+ * Вимкнений розклад (enabled: false, дефолт) означає "завжди відкрито" —
+ * зберігає попередню поведінку для всіх, хто ще не налаштував розклад.
+ * @param {{enabled?: boolean, from?: string, to?: string, weekdays?: number[]}} [schedule]
+ * @returns {boolean}
+ */
+function isBotOpenNow(schedule) {
+  if (!schedule || !schedule.enabled) return true;
+  const { weekday, hhmm } = getZonedNow();
+  const weekdays = Array.isArray(schedule.weekdays) ? schedule.weekdays : [1, 2, 3, 4, 5];
+  if (!weekdays.includes(weekday)) return false;
+  return hhmm >= (schedule.from || '00:00') && hhmm <= (schedule.to || '23:59');
+}
+
+const OFF_HOURS_REPLY =
+  'Наразі бот працює поза робочим розкладом. Залиште, будь ласка, своє питання — ми відповімо, щойно повернемось онлайн.';
+
+/* ===== CRM WEBHOOK ===== */
+
+/**
+ * Реальний POST на CRM-webhook з таймаутом. Кидає помилку при мережевому
+ * збої або не-2xx відповіді — виклик сам вирішує, чи це фатально.
+ * @param {string} url
+ * @param {object} payload
+ * @returns {Promise<{ok: boolean, status: number}>}
+ */
+async function sendWebhookRequest(url, payload) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(8000),
+  });
+  return { ok: res.ok, status: res.status };
+}
+
+/**
+ * Fire-and-forget доставка події webhook — не повинна затримувати чи
+ * зривати відповідь бота користувачу, тому помилки лише логуються.
+ * @param {string} url
+ * @param {object} payload
+ */
+function fireWebhookAsync(url, payload) {
+  if (!url) return;
+  sendWebhookRequest(url, payload).catch((err) => {
+    console.error('[webhook] delivery failed:', err.message);
+  });
+}
+
 /* ===== DYNAMIC SYSTEM PROMPT ===== */
 
 /**
@@ -174,6 +245,23 @@ async function getChatReply(userMessage, firstName, sessionId) {
     loadHistory(sessionId),
   ]);
 
+  // history вже включає щойно збережене повідомлення користувача (caller
+  // зберігає його до виклику getChatReply) — довжина 1 означає, що це
+  // перше повідомлення сесії, тобто новий лід.
+  if (settings.webhookUrl && history.length <= 1) {
+    fireWebhookAsync(settings.webhookUrl, {
+      event: 'new_lead',
+      sessionId,
+      firstName: getValidUserName(firstName),
+      message: userMessage,
+      sentAt: new Date().toISOString(),
+    });
+  }
+
+  if (!isBotOpenNow(settings.schedule)) {
+    return OFF_HOURS_REPLY;
+  }
+
   const systemPrompt = buildSystemPrompt(firstName, settings);
   const conversation = history.length ? history : [{ role: 'user', content: userMessage }];
 
@@ -199,4 +287,6 @@ module.exports = {
   buildSystemPrompt,
   saveMessage,
   getChatReply,
+  isBotOpenNow,
+  sendWebhookRequest,
 };
