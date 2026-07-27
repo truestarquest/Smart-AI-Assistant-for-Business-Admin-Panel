@@ -55,6 +55,7 @@ const TRANSLATIONS = {
     page_sub_analytics: 'KPI та активність за 7 днів',
     page_sub_history: 'Фільтри, пошук, експорт (демо)',
     page_sub_settings: 'База знань, тон, розклад і webhook — усі реальні',
+    analytics_no_activity: 'Активності не було за цей період',
 
     refresh: 'Оновити',
     overview_recent: 'Останні сесії',
@@ -147,6 +148,7 @@ const TRANSLATIONS = {
     page_sub_analytics: '7-day KPIs and activity',
     page_sub_history: 'Filters, search, export (demo)',
     page_sub_settings: 'Knowledge base, tone, schedule & webhook are all real',
+    analytics_no_activity: 'No activity in this period',
 
     refresh: 'Refresh',
     overview_recent: 'Recent sessions',
@@ -843,18 +845,24 @@ const DAY_KEYS = ['day_sun', 'day_mon', 'day_tue', 'day_wed', 'day_thu', 'day_fr
 
 function renderSparkline(container, values) {
   const w = 640, h = 160, pad = 10;
+  // All-zero week is a real, common state (fresh deploy, quiet period) —
+  // scaling by min/max would still be flat in that case (min=max=0), but
+  // we make it explicit rather than relying on that coincidence, and
+  // label it so it doesn't read as a broken/empty chart.
+  const hasActivity = values.some((v) => v > 0);
   const max = Math.max(...values), min = Math.min(...values);
   const span = Math.max(max - min, 1);
   const stepX = (w - pad * 2) / (values.length - 1);
   const points = values.map((v, i) => {
     const x = pad + i * stepX;
-    const y = h - pad - ((v - min) / span) * (h - pad * 2);
+    const y = hasActivity ? h - pad - ((v - min) / span) * (h - pad * 2) : h / 2;
     return [x, y];
   });
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
   const areaPath = `${linePath} L${points[points.length - 1][0].toFixed(1)},${h - pad} L${points[0][0].toFixed(1)},${h - pad} Z`;
   const todayIdx = new Date().getDay();
   const labels = Array.from({ length: 7 }, (_, i) => t(DAY_KEYS[(todayIdx - 6 + i + 70) % 7]));
+  const emptyNote = hasActivity ? '' : `<div class="sparkline-empty">${t('analytics_no_activity')}</div>`;
 
   container.innerHTML = `
     <svg viewBox="0 0 ${w} ${h}" class="sparkline" preserveAspectRatio="xMidYMid meet">
@@ -869,6 +877,7 @@ function renderSparkline(container, values) {
       ${points.map((p) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="var(--bg-elevated)" stroke="var(--cyan)" stroke-width="2"/>`).join('')}
     </svg>
     <div class="sparkline-labels">${labels.map((l) => `<span>${l}</span>`).join('')}</div>
+    ${emptyNote}
   `;
 }
 
