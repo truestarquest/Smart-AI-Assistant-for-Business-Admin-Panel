@@ -5,6 +5,7 @@ const mongoose  = require('mongoose');
 const rateLimit = require('express-rate-limit');
 const Message   = require('../models/Message');
 const User      = require('../models/User');
+const { getSettings, saveSettings } = require('../models/Settings');
 const { requireAdminKey } = require('../middleware/adminAuth');
 
 const router = express.Router();
@@ -108,6 +109,123 @@ router.get('/stats', async (req, res) => {
   } catch (err) {
     console.error('[admin] Failed to fetch stats:', err.message);
     res.status(500).json({ success: false, message: 'Failed to fetch stats' });
+  }
+});
+
+// GET /api/admin/settings — база знань + тон для системного промпту бота
+router.get('/settings', async (req, res) => {
+  if (!isDbConnected()) return res.status(503).json({ success: false, message: 'Database is not connected' });
+  try {
+    const settings = await getSettings();
+    res.json({ success: true, data: settings });
+  } catch (err) {
+    console.error('[admin] Failed to fetch settings:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to fetch settings' });
+  }
+});
+
+// PUT /api/admin/settings
+router.put('/settings', async (req, res) => {
+  if (!isDbConnected()) return res.status(503).json({ success: false, message: 'Database is not connected' });
+  const { knowledgeBase, tone } = req.body || {};
+  if (typeof knowledgeBase !== 'undefined' && typeof knowledgeBase !== 'string') {
+    return res.status(400).json({ success: false, message: 'knowledgeBase must be a string' });
+  }
+  if (typeof tone !== 'undefined' && !['business', 'friendly', 'sales'].includes(tone)) {
+    return res.status(400).json({ success: false, message: 'tone must be one of: business, friendly, sales' });
+  }
+  try {
+    const updated = await saveSettings({ knowledgeBase, tone });
+    res.json({ success: true, data: updated });
+  } catch (err) {
+    console.error('[admin] Failed to save settings:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to save settings' });
+  }
+});
+
+// GET /api/admin/analytics — KPI-картки + активність за 7 днів для вкладки "Аналітика"
+router.get('/analytics', async (req, res) => {
+  if (!isDbConnected()) return res.status(503).json({ success: false, message: 'Database is not connected' });
+  try {
+    // UTC throughout — $dateToString below buckets in UTC by default, and
+    // the server's local TZ (e.g. Europe/Kyiv, UTC+3) would otherwise shift
+    // every day's bucket by one relative to the JS-side "today" cutoff,
+    // silently misattributing a session to the wrong day of the chart.
+    const startOfToday = new Date();
+    startOfToday.setUTCHours(0, 0, 0, 0);
+    const sevenDaysAgo = new Date(startOfToday);
+    sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 6); // 7-day window incl. today
+
+    const [dialogsTodaySessions, dayGroups, sessionSizes, recentMessages] = await Promise.all([
+      Message.distinct('sessionId', { createdAt: { $gte: startOfToday } }),
+      Message.aggregate([
+        { $match: { createdAt: { $gte: sevenDaysAgo } } },
+        { $group: { _id: { day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, sessionId: '$sessionId' } } },
+        { $group: { _id: '$_id.day', count: { $sum: 1 } } },
+      ]),
+      Message.aggregate([
+        { $match: { createdAt: { $gte: sevenDaysAgo } } },
+        { $group: { _id: '$sessionId', count: { $sum: 1 } } },
+      ]),
+      Message.find({ createdAt: { $gte: sevenDaysAgo } })
+        .sort({ sessionId: 1, createdAt: 1 })
+        .select('role sessionId createdAt')
+        .lean(),
+    ]);
+
+    const dayCounts = new Map(dayGroups.map((g) => [g._id, g.count]));
+    const week = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(startOfToday);
+      d.setUTCDate(d.getUTCDate() - i);
+      week.push(dayCounts.get(d.toISOString().slice(0, 10)) || 0);
+    }
+
+    // "Конверсія в лід" — без окремої CRM/lead-схеми ми не знаємо, хто
+    // реально залишив контакт, тож використовуємо чесний proxy: частка
+    // сесій за 7 днів, що зайшли за межі одного привітання (4+ повідомлень
+    // = діалог, що розвинувся, а не одноразовий "привіт"). Не справжня
+    // конверсія — коли з'явиться реальний lead-статус, замінити на нього.
+    const qualified = sessionSizes.filter((s) => s.count >= 4).length;
+    const conversionRate = sessionSizes.length
+      ? Math.round((qualified / sessionSizes.length) * 1000) / 10
+      : 0;
+
+    // Середній час відповіді бота: дельта між user-повідомленням і наступним
+    // одразу за ним bot-повідомленням у тій самій сесії. Дельти понад 2 хв
+    // відкидаємо — це означає, що користувач повернувся пізніше, а не що
+    // бот довго думав.
+    const bySession = new Map();
+    for (const m of recentMessages) {
+      if (!bySession.has(m.sessionId)) bySession.set(m.sessionId, []);
+      bySession.get(m.sessionId).push(m);
+    }
+    const deltas = [];
+    for (const msgs of bySession.values()) {
+      for (let i = 0; i < msgs.length - 1; i++) {
+        if (msgs[i].role === 'user' && msgs[i + 1].role === 'bot') {
+          const deltaSec = (new Date(msgs[i + 1].createdAt) - new Date(msgs[i].createdAt)) / 1000;
+          if (deltaSec >= 0 && deltaSec < 120) deltas.push(deltaSec);
+        }
+      }
+    }
+    const avgResponseSeconds = deltas.length
+      ? Math.round((deltas.reduce((a, b) => a + b, 0) / deltas.length) * 10) / 10
+      : 0;
+
+    res.json({
+      success: true,
+      data: {
+        dialogsToday: dialogsTodaySessions.length,
+        conversionRate,
+        avgResponseSeconds,
+        activeBots: 1, // одна Telegram-бот-інстанція — множинні боти не підтримуються
+        week,
+      },
+    });
+  } catch (err) {
+    console.error('[admin] Failed to compute analytics:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to compute analytics' });
   }
 });
 

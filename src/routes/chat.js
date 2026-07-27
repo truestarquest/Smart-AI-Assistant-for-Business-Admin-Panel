@@ -89,7 +89,7 @@ router.post('/', chatLimiter, async (req, res) => {
 
   try {
     // Єдине джерело правди — те саме, що використовує Telegram-бот (Aegis).
-    const reply = await getChatReply(trimmedMessage, null);
+    const reply = await getChatReply(trimmedMessage, null, resolvedSessionId);
 
     await saveMessage('bot', reply, resolvedSessionId);
 
