@@ -9,6 +9,15 @@
    ============================================================ */
 const API_BASE = '/api';
 const STORAGE_KEY = 'admin_key';
+const ROLE_STORAGE_KEY = 'admin_role';
+
+// Демо-режим без бекенду: ці 2 ключі не йдуть в реальний /api, роль і всі
+// дані на цих вкладках — mock/localStorage. Будь-який інший ключ проходить
+// звичайну перевірку через reальний ADMIN_KEY і отримує роль 'admin'.
+const MOCK_ROLE_KEYS = {
+  'demo-admin-2024': 'admin',
+  'demo-manager-2024': 'manager',
+};
 // Реальна модель User (src/models/User.js) має лише name + email.
 // Обидва поля опційні на бекенді, але створити юзера можна лише
 // якщо заповнене хоча б одне з них (це перевіряється і на клієнті, і на сервері).
@@ -18,6 +27,8 @@ const USER_FIELDS = [
 ];
 
 let adminKey = sessionStorage.getItem(STORAGE_KEY) || '';
+let currentRole = sessionStorage.getItem(ROLE_STORAGE_KEY) || 'admin';
+let isMockSession = Object.prototype.hasOwnProperty.call(MOCK_ROLE_KEYS, adminKey);
 let currentSessionId = null;
 let editingUserId = null;
 
@@ -82,10 +93,23 @@ const loginError = document.getElementById('login-error');
 const logoutBtn = document.getElementById('logout-btn');
 
 async function tryLogin(key) {
+  if (Object.prototype.hasOwnProperty.call(MOCK_ROLE_KEYS, key)) {
+    adminKey = key;
+    currentRole = MOCK_ROLE_KEYS[key];
+    isMockSession = true;
+    sessionStorage.setItem(STORAGE_KEY, key);
+    sessionStorage.setItem(ROLE_STORAGE_KEY, currentRole);
+    showApp();
+    return;
+  }
+
   adminKey = key;
   try {
     await apiFetch('/admin/stats');
+    currentRole = 'admin';
+    isMockSession = false;
     sessionStorage.setItem(STORAGE_KEY, key);
+    sessionStorage.setItem(ROLE_STORAGE_KEY, currentRole);
     showApp();
   } catch (err) {
     adminKey = '';
@@ -107,16 +131,46 @@ loginForm.addEventListener('submit', (e) => {
 logoutBtn.addEventListener('click', () => {
   adminKey = '';
   sessionStorage.removeItem(STORAGE_KEY);
+  sessionStorage.removeItem(ROLE_STORAGE_KEY);
   appView.hidden = true;
   loginView.hidden = false;
   document.getElementById('admin-key').value = '';
 });
 
+/** Демо-ключі не бачать реальні вкладки (немає бекенду, яким їх авторизувати),
+ *  а Manager у демо бачить лише "Історія діалогів" (перегляд, без налаштувань). */
+function applyRoleVisibility() {
+  navItems.forEach((btn) => {
+    const view = btn.dataset.view;
+    const needsReal = btn.dataset.role === 'real';
+    const adminOnly = btn.dataset.role === 'admin';
+    let visible = true;
+    if (needsReal && isMockSession) visible = false;
+    if (adminOnly && currentRole !== 'admin') visible = false;
+    if (isMockSession && currentRole === 'manager' && view !== 'history') visible = false;
+    btn.hidden = !visible;
+  });
+
+}
+
 function showApp() {
   loginView.hidden = true;
   appView.hidden = false;
-  setConnStatus(true);
-  loadOverview();
+  applyRoleVisibility();
+  if (isMockSession) {
+    setConnStatus(true);
+    document.getElementById('conn-label').textContent = `Демо-режим · ${currentRole === 'admin' ? 'Admin' : 'Manager'}`;
+    const active = document.querySelector('.nav-item.active');
+    if (active && !active.hidden) {
+      active.click();
+    } else {
+      const firstVisible = Array.from(navItems).find((b) => !b.hidden);
+      if (firstVisible) firstVisible.click();
+    }
+  } else {
+    setConnStatus(true);
+    loadOverview();
+  }
 }
 
 function setConnStatus(online) {
@@ -139,10 +193,14 @@ const PAGE_META = {
   overview: { title: 'Огляд', subtitle: 'Стан асистента у реальному часі' },
   conversations: { title: 'Діалоги', subtitle: 'Історія листування з користувачами' },
   users: { title: 'Користувачі', subtitle: 'Керування обліковими записами' },
+  analytics: { title: 'Аналітика', subtitle: 'KPI та активність за 7 днів (демо)' },
+  history: { title: 'Історія діалогів', subtitle: 'Фільтри, пошук, експорт (демо)' },
+  settings: { title: 'Налаштування бота', subtitle: 'База знань, тон, розклад, webhook (демо)' },
 };
 
 navItems.forEach((btn) => {
   btn.addEventListener('click', () => {
+    if (btn.hidden) return;
     const view = btn.dataset.view;
     navItems.forEach((b) => b.classList.toggle('active', b === btn));
     views.forEach((v) => v.classList.toggle('active', v.id === `view-${view}`));
@@ -152,6 +210,9 @@ navItems.forEach((btn) => {
     if (view === 'overview') loadOverview();
     if (view === 'conversations') loadSessions();
     if (view === 'users') loadUsers();
+    if (view === 'analytics') loadAnalytics();
+    if (view === 'history') loadHistory();
+    if (view === 'settings') loadSettings();
   });
 });
 
@@ -352,8 +413,8 @@ function renderUsersTable(users) {
     const id = u._id || u.id;
     const tr = document.createElement('tr');
     tr.innerHTML =
-      columns.map((c) => `<td>${escapeHtml(u[c] ?? '—')}</td>`).join('') +
-      `<td class="muted">${formatTime(u.createdAt) || '—'}</td>` +
+      columns.map((c, i) => `<td data-label="${escapeHtml(USER_FIELDS[i].label)}">${escapeHtml(u[c] ?? '—')}</td>`).join('') +
+      `<td class="muted" data-label="Створено">${formatTime(u.createdAt) || '—'}</td>` +
       `<td class="row-actions">
         <button class="icon-btn" data-edit="${id}">Редагувати</button>
         <button class="icon-btn danger" data-delete="${id}">Видалити</button>
@@ -520,6 +581,270 @@ function renderBotText(value) {
 function renderUserText(value) {
   if (isLikelyMojibake(value)) return ENCODING_WARNING;
   return escapeHtml(value);
+}
+
+/* ============================================================
+   ANALYTICS (mock KPIs + 7-day sparkline)
+   ------------------------------------------------------------
+   No backend for this tab: numbers are generated once per day
+   (seeded by today's date, so refreshing doesn't jump around)
+   and cached in localStorage.
+   ============================================================ */
+function seededRandom(seed) {
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function dateSeed(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return h || 1;
+}
+
+function getMockAnalytics() {
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const cacheKey = `mock_analytics_${todayKey}`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) return JSON.parse(cached);
+
+  const rand = seededRandom(dateSeed(todayKey));
+  const week = Array.from({ length: 7 }, () => Math.round(24 + rand() * 60));
+  const data = {
+    dialogsToday: week[week.length - 1],
+    conversionRate: Math.round((18 + rand() * 16) * 10) / 10,
+    avgResponseSeconds: Math.round((1.2 + rand() * 2.4) * 10) / 10,
+    activeBots: 1,
+    week,
+  };
+  localStorage.setItem(cacheKey, JSON.stringify(data));
+  return data;
+}
+
+function renderSparkline(container, values) {
+  const w = 640, h = 160, pad = 10;
+  const max = Math.max(...values), min = Math.min(...values);
+  const span = Math.max(max - min, 1);
+  const stepX = (w - pad * 2) / (values.length - 1);
+  const points = values.map((v, i) => {
+    const x = pad + i * stepX;
+    const y = h - pad - ((v - min) / span) * (h - pad * 2);
+    return [x, y];
+  });
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  const areaPath = `${linePath} L${points[points.length - 1][0].toFixed(1)},${h - pad} L${points[0][0].toFixed(1)},${h - pad} Z`;
+  const days = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+  const todayIdx = new Date().getDay();
+  const labels = Array.from({ length: 7 }, (_, i) => days[(todayIdx - 6 + i + 70) % 7]);
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${w} ${h}" class="sparkline" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--cyan)" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="var(--cyan)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="${areaPath}" fill="url(#sparkFill)"/>
+      <path d="${linePath}" fill="none" stroke="var(--cyan)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${points.map((p) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="var(--bg-elevated)" stroke="var(--cyan)" stroke-width="2"/>`).join('')}
+    </svg>
+    <div class="sparkline-labels">${labels.map((l) => `<span>${l}</span>`).join('')}</div>
+  `;
+}
+
+function loadAnalytics() {
+  const data = getMockAnalytics();
+  document.getElementById('kpi-dialogs-today').textContent = data.dialogsToday;
+  document.getElementById('kpi-conversion').textContent = `${data.conversionRate}%`;
+  document.getElementById('kpi-response-time').textContent = `${data.avgResponseSeconds}с`;
+  document.getElementById('kpi-active-bots').textContent = data.activeBots;
+  renderSparkline(document.getElementById('activity-chart'), data.week);
+}
+
+/* ============================================================
+   HISTORY (mock dialogs — filters, search, CSV export)
+   ============================================================ */
+const MOCK_DIALOGS = [
+  { id: 'd1', name: 'Олена Ковальчук', phone: '+380 67 123 4567', status: 'booked', date: '2026-07-24', messages: [
+    { role: 'user', text: 'Привіт, скільки коштує базовий тариф?' },
+    { role: 'bot', text: 'Вітаю! Базовий тариф — $29/міс, включає до 200 діалогів.' },
+    { role: 'user', text: 'Добре, хочу записатись на демо' },
+    { role: 'bot', text: 'Чудово, ось посилання для запису: t.me/aegis_demo' },
+  ]},
+  { id: 'd2', name: 'Дмитро Іваненко', phone: '+380 50 987 6543', status: 'qualified', date: '2026-07-25', messages: [
+    { role: 'user', text: 'Чи інтегрується з Telegram?' },
+    { role: 'bot', text: 'Так, через One-Time Deep Links — клієнт переходить у ваш бот одразу з контекстом розмови.' },
+  ]},
+  { id: 'd3', name: 'Марія Соколова', phone: '+380 63 555 1122', status: 'new', date: '2026-07-26', messages: [
+    { role: 'user', text: 'Добрий день' },
+    { role: 'bot', text: 'Вітаю! Чим можу допомогти?' },
+  ]},
+  { id: 'd4', name: 'Андрій Петренко', phone: '+380 99 222 3344', status: 'lost', date: '2026-07-20', messages: [
+    { role: 'user', text: 'А є безкоштовний період?' },
+    { role: 'bot', text: 'Пробний період — 14 днів, без картки.' },
+    { role: 'user', text: 'Занадто дорого для нас, дякую' },
+  ]},
+  { id: 'd5', name: 'Ірина Бондаренко', phone: '+380 68 444 5566', status: 'booked', date: '2026-07-23', messages: [
+    { role: 'user', text: 'Потрібна інтеграція з нашою CRM' },
+    { role: 'bot', text: 'Підтримуємо webhook — налаштовується в адмін-панелі за 2 хвилини.' },
+    { role: 'user', text: 'Записуйте нас на дзвінок' },
+  ]},
+  { id: 'd6', name: 'Сергій Мельник', phone: '+380 96 777 8899', status: 'qualified', date: '2026-07-22', messages: [
+    { role: 'user', text: 'Скільки часу займає впровадження?' },
+    { role: 'bot', text: 'Зазвичай 1-2 дні на базове налаштування бота.' },
+  ]},
+];
+const STATUS_LABELS = { new: 'Новий', qualified: 'Кваліфікований', booked: 'Записаний', lost: 'Втрачений' };
+let historyInitialized = false;
+
+function filteredMockDialogs() {
+  const search = document.getElementById('history-search').value.trim().toLowerCase();
+  const status = document.getElementById('history-status-filter').value;
+  const date = document.getElementById('history-date-filter').value;
+  return MOCK_DIALOGS.filter((d) => {
+    if (status && d.status !== status) return false;
+    if (date && d.date !== date) return false;
+    if (search && !(`${d.name} ${d.phone}`.toLowerCase().includes(search))) return false;
+    return true;
+  });
+}
+
+function renderHistoryList() {
+  const container = document.getElementById('history-list');
+  const dialogs = filteredMockDialogs();
+  if (!dialogs.length) {
+    container.innerHTML = '<div class="empty-state"><p>Нічого не знайдено за цим фільтром.</p></div>';
+    return;
+  }
+  container.innerHTML = dialogs.map((d) => `
+    <div class="history-card" data-id="${d.id}">
+      <div class="history-card-head">
+        <div>
+          <span class="history-name">${escapeHtml(d.name)}</span>
+          <span class="history-phone muted">${escapeHtml(d.phone)}</span>
+        </div>
+        <div class="history-card-meta">
+          <span class="status-badge status-${d.status}">${STATUS_LABELS[d.status]}</span>
+          <span class="session-time">${d.date}</span>
+        </div>
+      </div>
+      <div class="history-thread" hidden>
+        ${d.messages.map((m) => `<div class="msg ${m.role === 'user' ? 'msg-user' : 'msg-bot'}">${escapeHtml(m.text)}</div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('.history-card').forEach((card) => {
+    card.querySelector('.history-card-head').addEventListener('click', () => {
+      card.querySelector('.history-thread').hidden = !card.querySelector('.history-thread').hidden;
+      card.classList.toggle('open');
+    });
+  });
+}
+
+function exportHistoryToCsv() {
+  const dialogs = filteredMockDialogs();
+  const header = ['Ім\'я', 'Телефон', 'Статус', 'Дата'];
+  const rows = dialogs.map((d) => [d.name, d.phone, STATUS_LABELS[d.status], d.date]);
+  const csv = [header, ...rows]
+    .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+  const blob = new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `dialogs-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV завантажено', 'success');
+}
+
+function loadHistory() {
+  if (!historyInitialized) {
+    document.getElementById('history-search').addEventListener('input', renderHistoryList);
+    document.getElementById('history-status-filter').addEventListener('change', renderHistoryList);
+    document.getElementById('history-date-filter').addEventListener('change', renderHistoryList);
+    document.getElementById('history-export-btn').addEventListener('click', exportHistoryToCsv);
+    historyInitialized = true;
+  }
+  renderHistoryList();
+}
+
+/* ============================================================
+   BOT SETTINGS (mock, admin only — persisted to localStorage)
+   ============================================================ */
+const SETTINGS_STORAGE_KEY = 'bot_settings';
+let settingsInitialized = false;
+
+function getStoredSettings() {
+  try {
+    return JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY)) || {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function loadSettings() {
+  const s = getStoredSettings();
+  document.getElementById('settings-kb').value = s.knowledgeBase || '';
+  document.getElementById('settings-tone').value = s.tone || 'business';
+  document.getElementById('settings-hours-from').value = s.hoursFrom || '09:00';
+  document.getElementById('settings-hours-to').value = s.hoursTo || '18:00';
+  document.getElementById('settings-webhook').value = s.webhookUrl || '';
+
+  const activeDays = s.weekdays || ['1', '2', '3', '4', '5'];
+  document.querySelectorAll('#settings-weekdays button').forEach((btn) => {
+    btn.classList.toggle('active', activeDays.includes(btn.dataset.day));
+  });
+
+  if (s.savedAt) {
+    document.getElementById('settings-saved-at').textContent = `Збережено: ${formatTime(s.savedAt)}`;
+  }
+
+  if (!settingsInitialized) {
+    document.querySelectorAll('#settings-weekdays button').forEach((btn) => {
+      btn.addEventListener('click', () => btn.classList.toggle('active'));
+    });
+
+    document.getElementById('settings-save-btn').addEventListener('click', () => {
+      const weekdays = Array.from(document.querySelectorAll('#settings-weekdays button.active'))
+        .map((b) => b.dataset.day);
+      const payload = {
+        knowledgeBase: document.getElementById('settings-kb').value,
+        tone: document.getElementById('settings-tone').value,
+        hoursFrom: document.getElementById('settings-hours-from').value,
+        hoursTo: document.getElementById('settings-hours-to').value,
+        weekdays,
+        webhookUrl: document.getElementById('settings-webhook').value.trim(),
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(payload));
+      document.getElementById('settings-saved-at').textContent = `Збережено: ${formatTime(payload.savedAt)}`;
+      showToast('Налаштування збережено', 'success');
+    });
+
+    document.getElementById('settings-webhook-test').addEventListener('click', async () => {
+      const url = document.getElementById('settings-webhook').value.trim();
+      if (!url) { showToast('Спочатку вкажіть Webhook URL', 'error'); return; }
+      try {
+        await fetch(url, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: 'test', source: 'aegis-admin', sentAt: new Date().toISOString() }),
+        });
+        showToast('Запит надіслано (перевірте лог на боці CRM)', 'success');
+      } catch (err) {
+        showToast(`Не вдалося надіслати запит: ${err.message}`, 'error');
+      }
+    });
+
+    settingsInitialized = true;
+  }
 }
 
 /* ============================================================
