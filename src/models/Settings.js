@@ -13,6 +13,13 @@ const settingsSchema = new Schema(
     _id: { type: String, default: SETTINGS_ID },
     knowledgeBase: { type: String, default: '', maxlength: 8000 },
     tone: { type: String, enum: ['business', 'friendly', 'sales'], default: 'business' },
+    schedule: {
+      enabled: { type: Boolean, default: false },
+      from: { type: String, default: '09:00' },
+      to: { type: String, default: '18:00' },
+      weekdays: { type: [Number], default: [1, 2, 3, 4, 5] },
+    },
+    webhookUrl: { type: String, default: '', maxlength: 500 },
     updatedAt: { type: Date, default: Date.now },
   },
   { versionKey: false }
@@ -20,7 +27,12 @@ const settingsSchema = new Schema(
 
 const SettingsModel = model('Settings', settingsSchema);
 
-const DEFAULT_SETTINGS = { knowledgeBase: '', tone: 'business' };
+const DEFAULT_SETTINGS = {
+  knowledgeBase: '',
+  tone: 'business',
+  schedule: { enabled: false, from: '09:00', to: '18:00', weekdays: [1, 2, 3, 4, 5] },
+  webhookUrl: '',
+};
 
 // Called on every chat turn (openaiService.getChatReply) — same "degrade,
 // don't hang" contract as loadHistory()/saveMessage(): if Mongo isn't
@@ -38,10 +50,17 @@ async function getSettings() {
   }
 }
 
-async function saveSettings({ knowledgeBase, tone }) {
+async function saveSettings({ knowledgeBase, tone, schedule, webhookUrl }) {
   const update = { updatedAt: new Date() };
   if (typeof knowledgeBase === 'string') update.knowledgeBase = knowledgeBase.slice(0, 8000);
   if (tone === 'business' || tone === 'friendly' || tone === 'sales') update.tone = tone;
+  if (typeof webhookUrl === 'string') update.webhookUrl = webhookUrl.slice(0, 500);
+  if (schedule && typeof schedule === 'object') {
+    if (typeof schedule.enabled === 'boolean') update['schedule.enabled'] = schedule.enabled;
+    if (typeof schedule.from === 'string') update['schedule.from'] = schedule.from;
+    if (typeof schedule.to === 'string') update['schedule.to'] = schedule.to;
+    if (Array.isArray(schedule.weekdays)) update['schedule.weekdays'] = schedule.weekdays;
+  }
 
   return SettingsModel.findByIdAndUpdate(
     SETTINGS_ID,
