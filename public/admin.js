@@ -857,7 +857,7 @@ function renderSparkline(container, values) {
   const labels = Array.from({ length: 7 }, (_, i) => t(DAY_KEYS[(todayIdx - 6 + i + 70) % 7]));
 
   container.innerHTML = `
-    <svg viewBox="0 0 ${w} ${h}" class="sparkline" preserveAspectRatio="none">
+    <svg viewBox="0 0 ${w} ${h}" class="sparkline" preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="var(--cyan)" stop-opacity="0.35"/>
