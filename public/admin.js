@@ -54,7 +54,7 @@ const TRANSLATIONS = {
     page_sub_users: 'Керування обліковими записами',
     page_sub_analytics: 'KPI та активність за 7 днів',
     page_sub_history: 'Фільтри, пошук, експорт (демо)',
-    page_sub_settings: 'База знань і тон — реальні; розклад/webhook — демо',
+    page_sub_settings: 'База знань, тон, розклад і webhook — усі реальні',
 
     refresh: 'Оновити',
     overview_recent: 'Останні сесії',
@@ -146,7 +146,7 @@ const TRANSLATIONS = {
     page_sub_users: 'Manage accounts',
     page_sub_analytics: '7-day KPIs and activity',
     page_sub_history: 'Filters, search, export (demo)',
-    page_sub_settings: 'Knowledge base & tone are real; schedule/webhook are demo',
+    page_sub_settings: 'Knowledge base, tone, schedule & webhook are all real',
 
     refresh: 'Refresh',
     overview_recent: 'Recent sessions',
@@ -1000,39 +1000,31 @@ function loadHistory() {
 /* ============================================================
    BOT SETTINGS
    ------------------------------------------------------------
-   Knowledge base + tone are real now — GET/PUT /api/admin/settings,
-   read straight into buildSystemPrompt() on the server (see
-   src/services/openaiService.js). Schedule + webhook stay
-   localStorage/demo for this round (no bot-side enforcement yet —
-   see conversation history for why that's scoped separately).
+   Knowledge base, tone, schedule and webhook are all real —
+   GET/PUT /api/admin/settings, read straight into
+   buildSystemPrompt() / isBotOpenNow() on the server (see
+   src/services/openaiService.js). The webhook test button hits
+   POST /api/admin/settings/webhook-test, which does the actual
+   POST server-side (a client-side no-cors fetch can't see whether
+   the CRM actually accepted it).
    ============================================================ */
-const LOCAL_SETTINGS_KEY = 'bot_settings_local'; // schedule + webhook only
 let settingsInitialized = false;
 
-function getLocalSettings() {
-  try {
-    return JSON.parse(localStorage.getItem(LOCAL_SETTINGS_KEY)) || {};
-  } catch (_) {
-    return {};
-  }
-}
-
 async function loadSettings() {
-  const local = getLocalSettings();
-  document.getElementById('settings-hours-from').value = local.hoursFrom || '09:00';
-  document.getElementById('settings-hours-to').value = local.hoursTo || '18:00';
-  document.getElementById('settings-webhook').value = local.webhookUrl || '';
-
-  const activeDays = local.weekdays || ['1', '2', '3', '4', '5'];
-  document.querySelectorAll('#settings-weekdays button').forEach((btn) => {
-    btn.classList.toggle('active', activeDays.includes(btn.dataset.day));
-  });
-
   try {
     const json = await apiFetch('/admin/settings');
     const remote = unwrapObject(json);
     document.getElementById('settings-kb').value = remote.knowledgeBase || '';
     document.getElementById('settings-tone').value = remote.tone || 'business';
+    document.getElementById('settings-hours-from').value = remote.schedule?.from || '09:00';
+    document.getElementById('settings-hours-to').value = remote.schedule?.to || '18:00';
+    document.getElementById('settings-webhook').value = remote.webhookUrl || '';
+
+    const activeDays = (remote.schedule?.weekdays ?? [1, 2, 3, 4, 5]).map(String);
+    document.querySelectorAll('#settings-weekdays button').forEach((btn) => {
+      btn.classList.toggle('active', activeDays.includes(btn.dataset.day));
+    });
+
     if (remote.updatedAt) {
       document.getElementById('settings-saved-at').textContent = t('settings_saved', formatTime(remote.updatedAt));
     }
@@ -1047,13 +1039,7 @@ async function loadSettings() {
 
     document.getElementById('settings-save-btn').addEventListener('click', async () => {
       const weekdays = Array.from(document.querySelectorAll('#settings-weekdays button.active'))
-        .map((b) => b.dataset.day);
-      localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify({
-        hoursFrom: document.getElementById('settings-hours-from').value,
-        hoursTo: document.getElementById('settings-hours-to').value,
-        weekdays,
-        webhookUrl: document.getElementById('settings-webhook').value.trim(),
-      }));
+        .map((b) => Number(b.dataset.day));
 
       try {
         const json = await apiFetch('/admin/settings', {
@@ -1061,6 +1047,13 @@ async function loadSettings() {
           body: JSON.stringify({
             knowledgeBase: document.getElementById('settings-kb').value,
             tone: document.getElementById('settings-tone').value,
+            schedule: {
+              enabled: true,
+              from: document.getElementById('settings-hours-from').value || '09:00',
+              to: document.getElementById('settings-hours-to').value || '18:00',
+              weekdays,
+            },
+            webhookUrl: document.getElementById('settings-webhook').value.trim(),
           }),
         });
         const saved = unwrapObject(json);
@@ -1075,11 +1068,9 @@ async function loadSettings() {
       const url = document.getElementById('settings-webhook').value.trim();
       if (!url) { showToast(t('webhook_missing'), 'error'); return; }
       try {
-        await fetch(url, {
+        await apiFetch('/admin/settings/webhook-test', {
           method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ event: 'test', source: 'aegis-admin', sentAt: new Date().toISOString() }),
+          body: JSON.stringify({ url }),
         });
         showToast(t('webhook_sent'), 'success');
       } catch (err) {
