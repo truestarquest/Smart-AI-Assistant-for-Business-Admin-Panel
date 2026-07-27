@@ -17,6 +17,12 @@
   <div class="login-ambient" aria-hidden="true"></div>
 
   <div class="login-card">
+    <div class="lang-switcher" id="login-lang-switcher" data-active="uk">
+      <span class="lang-slider" aria-hidden="true"></span>
+      <button class="lang-btn active" data-lang="uk">UA</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+
     <div class="brand">
       <div class="brand-mark">
         <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -31,24 +37,24 @@
         </svg>
       </div>
       <div class="brand-text">
-        <h1>Aegis AI — Admin</h1>
-        <p>Керування та моніторинг асистента</p>
+        <h1 data-i18n="login_title">Aegis AI — Admin</h1>
+        <p data-i18n="login_subtitle">Керування та моніторинг асистента</p>
       </div>
     </div>
 
     <div class="waveform" id="login-waveform" aria-hidden="true"></div>
 
     <form id="login-form" class="login-form" autocomplete="off">
-      <label for="admin-key">Admin Key</label>
+      <label for="admin-key" data-i18n="login_label">Admin Key</label>
       <input type="password" id="admin-key" name="admin-key" placeholder="super-secret-admin-key-change-me" autocomplete="off" required>
       <button type="submit" class="btn btn-primary btn-block">
-        <span>Увійти</span>
+        <span data-i18n="login_submit">Увійти</span>
       </button>
       <p id="login-error" class="login-error" hidden></p>
     </form>
 
-    <p class="login-hint">Ключ перевіряється при першому запиті та зберігається локально у цьому браузері.</p>
-    <p class="login-hint">Демо-режим (без бекенду): <code>demo-admin-2024</code> / <code>demo-manager-2024</code>.</p>
+    <p class="login-hint" data-i18n="login_hint1">Ключ перевіряється при першому запиті та зберігається локально у цьому браузері.</p>
+    <p class="login-hint"><span data-i18n="login_hint2">Демо-режим (без бекенду):</span> <code>demo-admin-2024</code> / <code>demo-manager-2024</code>.</p>
   </div>
 </div>
 
@@ -75,27 +81,27 @@
     <nav class="sidebar-nav">
       <button class="nav-item active" data-view="overview" data-role="real">
         <svg viewBox="0 0 24 24" fill="none"><path d="M4 13h6V4H4v9zm0 7h6v-5H4v5zm10 0h6V11h-6v9zm0-16v5h6V4h-6z" fill="currentColor"/></svg>
-        <span>Огляд</span>
+        <span data-i18n="nav_overview">Огляд</span>
       </button>
       <button class="nav-item" data-view="conversations" data-role="real">
         <svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16v12H7l-3 3V4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-        <span>Діалоги</span>
+        <span data-i18n="nav_conversations">Діалоги</span>
       </button>
       <button class="nav-item" data-view="users" data-role="real">
         <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 19c.8-3.2 3-4.8 5.5-4.8s4.7 1.6 5.5 4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M15.5 8.4a3 3 0 1 1 3.7 2.9M19 14c2 .5 3.2 1.8 3.7 3.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-        <span>Користувачі</span>
+        <span data-i18n="nav_users">Користувачі</span>
       </button>
-      <button class="nav-item" data-view="analytics">
+      <button class="nav-item" data-view="analytics" data-role="real">
         <svg viewBox="0 0 24 24" fill="none"><path d="M5 19V9M12 19V5M19 19v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <span>Аналітика</span>
+        <span data-i18n="nav_analytics">Аналітика</span>
       </button>
       <button class="nav-item" data-view="history">
         <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span>Історія діалогів</span>
+        <span data-i18n="nav_history">Історія діалогів</span>
       </button>
-      <button class="nav-item" data-view="settings" data-role="admin">
+      <button class="nav-item" data-view="settings" data-role="real">
         <svg viewBox="0 0 24 24" fill="none"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="currentColor" stroke-width="1.6"/><path d="M19.4 13a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V19a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H4a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H10a1.65 1.65 0 0 0 1-1.51V4a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V10a1.65 1.65 0 0 0 1.51 1H20a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.3"/></svg>
-        <span>Налаштування бота</span>
+        <span data-i18n="nav_settings">Налаштування бота</span>
       </button>
     </nav>
 
@@ -104,15 +110,20 @@
         <span class="pulse-dot" id="conn-dot"></span>
         <span id="conn-label">З'єднання…</span>
       </div>
-      <button id="logout-btn" class="btn-ghost">Вийти</button>
+      <button id="logout-btn" class="btn-ghost" data-i18n="logout">Вийти</button>
     </div>
   </aside>
 
   <main class="main">
     <header class="topbar">
       <div>
-        <h2 id="page-title">Огляд</h2>
-        <p id="page-subtitle">Стан асистента у реальному часі</p>
+        <h2 id="page-title" data-i18n="nav_overview">Огляд</h2>
+        <p id="page-subtitle" data-i18n="page_sub_overview">Стан асистента у реальному часі</p>
+      </div>
+      <div class="lang-switcher" id="app-lang-switcher" data-active="uk">
+        <span class="lang-slider" aria-hidden="true"></span>
+        <button class="lang-btn active" data-lang="uk">UA</button>
+        <button class="lang-btn" data-lang="en">EN</button>
       </div>
       <div class="waveform small" id="header-waveform" aria-hidden="true"></div>
     </header>
@@ -125,24 +136,24 @@
           <div class="stat-card" data-glow="cyan">
             <span class="stat-label">Users</span>
             <span class="stat-value" id="stat-users">—</span>
-            <span class="stat-foot">усього зареєстровано</span>
+            <span class="stat-foot" data-i18n="overview_users_foot">усього зареєстровано</span>
           </div>
           <div class="stat-card" data-glow="violet">
             <span class="stat-label">Messages</span>
             <span class="stat-value" id="stat-messages">—</span>
-            <span class="stat-foot">повідомлень у системі</span>
+            <span class="stat-foot" data-i18n="overview_messages_foot">повідомлень у системі</span>
           </div>
           <div class="stat-card" data-glow="mix">
             <span class="stat-label">Active sessions</span>
             <span class="stat-value" id="stat-sessions">—</span>
-            <span class="stat-foot">унікальних діалогів</span>
+            <span class="stat-foot" data-i18n="overview_sessions_foot">унікальних діалогів</span>
           </div>
         </div>
 
         <div class="panel">
           <div class="panel-head">
-            <h3>Останні сесії</h3>
-            <button class="btn-ghost small" data-refresh="overview">Оновити</button>
+            <h3 data-i18n="overview_recent">Останні сесії</h3>
+            <button class="btn-ghost small" data-refresh="overview" data-i18n="refresh">Оновити</button>
           </div>
           <div id="overview-sessions" class="session-list compact"></div>
         </div>
@@ -153,20 +164,20 @@
         <div class="split">
           <div class="panel session-panel">
             <div class="panel-head">
-              <h3>Сесії</h3>
-              <button class="btn-ghost small" data-refresh="sessions">Оновити</button>
+              <h3 data-i18n="sessions">Сесії</h3>
+              <button class="btn-ghost small" data-refresh="sessions" data-i18n="refresh">Оновити</button>
             </div>
             <div id="session-list" class="session-list"></div>
           </div>
 
           <div class="panel thread-panel">
             <div class="panel-head">
-              <h3 id="thread-title">Оберіть сесію</h3>
+              <h3 id="thread-title" data-i18n="thread_pick">Оберіть сесію</h3>
               <span id="thread-meta" class="muted"></span>
             </div>
             <div id="thread" class="thread">
               <div class="empty-state">
-                <p>Виберіть сесію зліва, щоб переглянути листування.</p>
+                <p data-i18n="thread_empty">Виберіть сесію зліва, щоб переглянути листування.</p>
               </div>
             </div>
           </div>
@@ -177,10 +188,10 @@
       <section id="view-users" class="view">
         <div class="panel">
           <div class="panel-head">
-            <h3>Користувачі</h3>
+            <h3 data-i18n="nav_users">Користувачі</h3>
             <div class="panel-actions">
-              <button class="btn-ghost small" data-refresh="users">Оновити</button>
-              <button class="btn btn-primary small" id="add-user-btn">+ Додати</button>
+              <button class="btn-ghost small" data-refresh="users" data-i18n="refresh">Оновити</button>
+              <button class="btn btn-primary small" id="add-user-btn" data-i18n="user_add">+ Додати</button>
             </div>
           </div>
           <div class="table-wrap">
@@ -192,55 +203,55 @@
         </div>
       </section>
 
-      <!-- ---- ANALYTICS (mock) ---- -->
+      <!-- ---- ANALYTICS ---- -->
       <section id="view-analytics" class="view">
         <div class="stat-grid">
           <div class="stat-card" data-glow="cyan">
-            <span class="stat-label">Діалогів сьогодні</span>
+            <span class="stat-label" data-i18n="kpi_dialogs_today">Діалогів сьогодні</span>
             <span class="stat-value" id="kpi-dialogs-today">—</span>
-            <span class="stat-foot">за останні 24 год</span>
+            <span class="stat-foot" data-i18n="kpi_dialogs_today_foot">за сьогодні</span>
           </div>
           <div class="stat-card" data-glow="violet">
-            <span class="stat-label">Конверсія в лід</span>
+            <span class="stat-label" data-i18n="kpi_conversion">Конверсія в лід</span>
             <span class="stat-value" id="kpi-conversion">—</span>
-            <span class="stat-foot">діалог → залишений контакт</span>
+            <span class="stat-foot" data-i18n="kpi_conversion_foot">діалог → залишений контакт</span>
           </div>
           <div class="stat-card" data-glow="mix">
-            <span class="stat-label">Сер. час відповіді</span>
+            <span class="stat-label" data-i18n="kpi_response_time">Сер. час відповіді</span>
             <span class="stat-value" id="kpi-response-time">—</span>
-            <span class="stat-foot">бот → перше повідомлення</span>
+            <span class="stat-foot" data-i18n="kpi_response_time_foot">користувач → бот</span>
           </div>
           <div class="stat-card" data-glow="cyan">
-            <span class="stat-label">Активні боти</span>
+            <span class="stat-label" data-i18n="kpi_active_bots">Активні боти</span>
             <span class="stat-value" id="kpi-active-bots">—</span>
-            <span class="stat-foot">підключено до Telegram</span>
+            <span class="stat-foot" data-i18n="kpi_active_bots_foot">підключено до Telegram</span>
           </div>
         </div>
 
         <div class="panel">
           <div class="panel-head">
-            <h3>Активність за 7 днів</h3>
-            <span class="muted">демо-дані, оновлюється при вході</span>
+            <h3 data-i18n="analytics_chart_title">Активність за 7 днів</h3>
+            <span class="muted" id="analytics-chart-note" data-i18n="analytics_chart_note">реальні дані з бази</span>
           </div>
           <div class="chart-wrap" id="activity-chart"></div>
         </div>
       </section>
 
-      <!-- ---- HISTORY (mock dialogs) ---- -->
+      <!-- ---- HISTORY (mock dialogs — separate demo tab, see README) ---- -->
       <section id="view-history" class="view">
         <div class="panel">
           <div class="panel-head">
-            <h3>Історія діалогів</h3>
-            <button class="btn btn-primary small" id="history-export-btn">Експорт у CSV</button>
+            <h3 data-i18n="nav_history">Історія діалогів</h3>
+            <button class="btn btn-primary small" id="history-export-btn" data-i18n="history_export">Експорт у CSV</button>
           </div>
           <div class="history-filters">
-            <input type="text" id="history-search" placeholder="Пошук за ім'ям або телефоном…">
+            <input type="text" id="history-search" data-i18n-placeholder="history_search_ph" placeholder="Пошук за ім'ям або телефоном…">
             <select id="history-status-filter">
-              <option value="">Усі статуси</option>
-              <option value="new">Новий</option>
-              <option value="qualified">Кваліфікований</option>
-              <option value="booked">Записаний</option>
-              <option value="lost">Втрачений</option>
+              <option value="" data-i18n="status_all">Усі статуси</option>
+              <option value="new" data-i18n="status_new">Новий</option>
+              <option value="qualified" data-i18n="status_qualified">Кваліфікований</option>
+              <option value="booked" data-i18n="status_booked">Записаний</option>
+              <option value="lost" data-i18n="status_lost">Втрачений</option>
             </select>
             <input type="date" id="history-date-filter">
           </div>
@@ -248,58 +259,58 @@
         </div>
       </section>
 
-      <!-- ---- BOT SETTINGS (mock, admin only) ---- -->
+      <!-- ---- BOT SETTINGS (KB + tone real; schedule/webhook still local) ---- -->
       <section id="view-settings" class="view">
         <div class="settings-grid">
           <div class="panel">
-            <div class="panel-head"><h3>База знань</h3></div>
+            <div class="panel-head"><h3 data-i18n="settings_kb">База знань</h3></div>
             <div class="panel-body">
-              <textarea id="settings-kb" rows="10" placeholder="Факти про продукт, тарифи, відповіді на часті питання…"></textarea>
+              <textarea id="settings-kb" rows="10" data-i18n-placeholder="settings_kb_ph" placeholder="Факти про продукт, тарифи, відповіді на часті питання…"></textarea>
             </div>
           </div>
 
           <div class="panel">
-            <div class="panel-head"><h3>Тон спілкування</h3></div>
+            <div class="panel-head"><h3 data-i18n="settings_tone">Тон спілкування</h3></div>
             <div class="panel-body">
               <select id="settings-tone">
-                <option value="business">Діловий</option>
-                <option value="friendly">Дружній</option>
-                <option value="sales">Продажний</option>
+                <option value="business" data-i18n="tone_business">Діловий</option>
+                <option value="friendly" data-i18n="tone_friendly">Дружній</option>
+                <option value="sales" data-i18n="tone_sales">Продажний</option>
               </select>
             </div>
           </div>
 
           <div class="panel">
-            <div class="panel-head"><h3>Розклад роботи бота</h3></div>
+            <div class="panel-head"><h3 data-i18n="settings_schedule">Розклад роботи бота</h3></div>
             <div class="panel-body schedule-body">
               <div class="field-row">
-                <label>З <input type="time" id="settings-hours-from"></label>
-                <label>До <input type="time" id="settings-hours-to"></label>
+                <label><span data-i18n="schedule_from">З</span> <input type="time" id="settings-hours-from"></label>
+                <label><span data-i18n="schedule_to">До</span> <input type="time" id="settings-hours-to"></label>
               </div>
               <div class="weekday-picker" id="settings-weekdays">
-                <button type="button" data-day="1">Пн</button>
-                <button type="button" data-day="2">Вт</button>
-                <button type="button" data-day="3">Ср</button>
-                <button type="button" data-day="4">Чт</button>
-                <button type="button" data-day="5">Пт</button>
-                <button type="button" data-day="6">Сб</button>
-                <button type="button" data-day="0">Нд</button>
+                <button type="button" data-day="1" data-i18n="day_mon">Пн</button>
+                <button type="button" data-day="2" data-i18n="day_tue">Вт</button>
+                <button type="button" data-day="3" data-i18n="day_wed">Ср</button>
+                <button type="button" data-day="4" data-i18n="day_thu">Чт</button>
+                <button type="button" data-day="5" data-i18n="day_fri">Пт</button>
+                <button type="button" data-day="6" data-i18n="day_sat">Сб</button>
+                <button type="button" data-day="0" data-i18n="day_sun">Нд</button>
               </div>
-              <p class="muted">Вихідні дні — вимкнені кнопки вище.</p>
+              <p class="muted" data-i18n="schedule_hint">Вихідні дні — вимкнені кнопки вище.</p>
             </div>
           </div>
 
           <div class="panel">
-            <div class="panel-head"><h3>Webhook для CRM</h3></div>
+            <div class="panel-head"><h3 data-i18n="settings_webhook">Webhook для CRM</h3></div>
             <div class="panel-body">
               <input type="text" id="settings-webhook" placeholder="https://your-crm.example.com/webhook">
-              <button class="btn-ghost small" id="settings-webhook-test" style="margin-top:10px;">Тестовий запит</button>
+              <button class="btn-ghost small" id="settings-webhook-test" style="margin-top:10px;" data-i18n="webhook_test">Тестовий запит</button>
             </div>
           </div>
         </div>
 
         <div class="settings-save-bar">
-          <button class="btn btn-primary" id="settings-save-btn">Зберегти налаштування</button>
+          <button class="btn btn-primary" id="settings-save-btn" data-i18n="settings_save">Зберегти налаштування</button>
           <span class="muted" id="settings-saved-at"></span>
         </div>
       </section>
@@ -312,7 +323,7 @@
 <div id="user-modal" class="modal-overlay" hidden>
   <div class="modal">
     <div class="modal-head">
-      <h3 id="modal-title">Новий користувач</h3>
+      <h3 id="modal-title" data-i18n="user_new">Новий користувач</h3>
       <button class="modal-close" id="modal-close" aria-label="Закрити">&times;</button>
     </div>
     <form id="user-form" class="modal-form"></form>

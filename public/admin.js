@@ -22,9 +22,266 @@ const MOCK_ROLE_KEYS = {
 // Обидва поля опційні на бекенді, але створити юзера можна лише
 // якщо заповнене хоча б одне з них (це перевіряється і на клієнті, і на сервері).
 const USER_FIELDS = [
-  { key: 'name',  label: 'Ім\'я',  type: 'text',  required: false },
-  { key: 'email', label: 'Email',  type: 'email', required: false },
+  { key: 'name',  type: 'text',  required: false },
+  { key: 'email', type: 'email', required: false },
 ];
+
+/* ============================================================
+   I18N (UK/EN) — same pattern as the main landing page's switcher,
+   just without the hologram-dissolve animation (not worth it for
+   a staff-only tool). data-i18n on static markup, t(key) for
+   anything rendered from JS.
+   ============================================================ */
+const TRANSLATIONS = {
+  uk: {
+    login_title: 'Aegis AI — Admin',
+    login_subtitle: 'Керування та моніторинг асистента',
+    login_label: 'Admin Key',
+    login_submit: 'Увійти',
+    login_hint1: 'Ключ перевіряється при першому запиті та зберігається локально у цьому браузері.',
+    login_hint2: 'Демо-режим (без бекенду):',
+    login_error_invalid: 'Невірний Admin Key.',
+    login_error_connect: (msg) => `Не вдалося з'єднатись: ${msg}`,
+
+    nav_overview: 'Огляд', nav_conversations: 'Діалоги', nav_users: 'Користувачі',
+    nav_analytics: 'Аналітика', nav_history: 'Історія діалогів', nav_settings: 'Налаштування бота',
+    logout: 'Вийти',
+    conn_connecting: "З'єднання…", conn_online: "З'єднано", conn_offline: "Немає з'єднання",
+    conn_demo: (role) => `Демо-режим · ${role === 'admin' ? 'Admin' : 'Manager'}`,
+
+    page_sub_overview: 'Стан асистента у реальному часі',
+    page_sub_conversations: 'Історія листування з користувачами',
+    page_sub_users: 'Керування обліковими записами',
+    page_sub_analytics: 'KPI та активність за 7 днів',
+    page_sub_history: 'Фільтри, пошук, експорт (демо)',
+    page_sub_settings: 'База знань і тон — реальні; розклад/webhook — демо',
+
+    refresh: 'Оновити',
+    overview_recent: 'Останні сесії',
+    overview_users_foot: 'усього зареєстровано',
+    overview_messages_foot: 'повідомлень у системі',
+    overview_sessions_foot: 'унікальних діалогів',
+    sessions: 'Сесії',
+    thread_pick: 'Оберіть сесію',
+    thread_empty: 'Виберіть сесію зліва, щоб переглянути листування.',
+    thread_loading: 'Завантаження…',
+    thread_none: 'У цій сесії ще немає повідомлень.',
+    thread_error: (msg) => `Помилка завантаження: ${msg}`,
+    thread_messages_count: (n) => `${n} повідомлень`,
+    sessions_none: 'Сесій ще немає.',
+
+    user_add: '+ Додати',
+    user_new: 'Новий користувач',
+    user_edit: 'Редагувати користувача',
+    user_created: 'Створено',
+    user_edit_btn: 'Редагувати',
+    user_delete_btn: 'Видалити',
+    user_cancel: 'Скасувати',
+    user_save: 'Зберегти',
+    user_create: 'Створити',
+    user_none: 'Користувачів ще немає.',
+    user_loading: 'Завантаження…',
+    user_delete_confirm: 'Видалити цього користувача?',
+    user_deleted: 'Користувача видалено',
+    user_changes_saved: 'Зміни збережено',
+    user_created_toast: 'Користувача створено',
+    user_fill_required: "Заповніть ім'я або email",
+    field_name: "Ім'я",
+    field_email: 'Email',
+
+    kpi_dialogs_today: 'Діалогів сьогодні',
+    kpi_dialogs_today_foot: 'за сьогодні',
+    kpi_conversion: 'Конверсія в лід',
+    kpi_conversion_foot: 'діалог → залишений контакт',
+    kpi_response_time: 'Сер. час відповіді',
+    kpi_response_time_foot: 'користувач → бот',
+    kpi_active_bots: 'Активні боти',
+    kpi_active_bots_foot: 'підключено до Telegram',
+    analytics_chart_title: 'Активність за 7 днів',
+    analytics_chart_note: 'реальні дані з бази',
+
+    history_export: 'Експорт у CSV',
+    history_search_ph: "Пошук за ім'ям або телефоном…",
+    history_none: 'Нічого не знайдено за цим фільтром.',
+    history_csv_done: 'CSV завантажено',
+    status_all: 'Усі статуси', status_new: 'Новий', status_qualified: 'Кваліфікований',
+    status_booked: 'Записаний', status_lost: 'Втрачений',
+
+    settings_kb: 'База знань',
+    settings_kb_ph: 'Факти про продукт, тарифи, відповіді на часті питання…',
+    settings_tone: 'Тон спілкування',
+    tone_business: 'Діловий', tone_friendly: 'Дружній', tone_sales: 'Продажний',
+    settings_schedule: 'Розклад роботи бота',
+    schedule_from: 'З', schedule_to: 'До',
+    schedule_hint: 'Вихідні дні — вимкнені кнопки вище.',
+    day_mon: 'Пн', day_tue: 'Вт', day_wed: 'Ср', day_thu: 'Чт', day_fri: 'Пт', day_sat: 'Сб', day_sun: 'Нд',
+    settings_webhook: 'Webhook для CRM',
+    webhook_test: 'Тестовий запит',
+    webhook_missing: 'Спочатку вкажіть Webhook URL',
+    webhook_sent: 'Запит надіслано (перевірте лог на боці CRM)',
+    webhook_failed: (msg) => `Не вдалося надіслати запит: ${msg}`,
+    settings_save: 'Зберегти налаштування',
+    settings_saved: (time) => `Збережено: ${time}`,
+    settings_saved_toast: 'Налаштування збережено',
+    settings_load_failed: (msg) => `Не вдалося завантажити налаштування: ${msg}`,
+  },
+  en: {
+    login_title: 'Aegis AI — Admin',
+    login_subtitle: 'Manage and monitor the assistant',
+    login_label: 'Admin Key',
+    login_submit: 'Sign in',
+    login_hint1: 'The key is checked on first request and stored locally in this browser.',
+    login_hint2: 'Demo mode (no backend):',
+    login_error_invalid: 'Invalid Admin Key.',
+    login_error_connect: (msg) => `Could not connect: ${msg}`,
+
+    nav_overview: 'Overview', nav_conversations: 'Conversations', nav_users: 'Users',
+    nav_analytics: 'Analytics', nav_history: 'Dialog history', nav_settings: 'Bot settings',
+    logout: 'Log out',
+    conn_connecting: 'Connecting…', conn_online: 'Connected', conn_offline: 'No connection',
+    conn_demo: (role) => `Demo mode · ${role === 'admin' ? 'Admin' : 'Manager'}`,
+
+    page_sub_overview: 'Assistant status in real time',
+    page_sub_conversations: 'Message history with users',
+    page_sub_users: 'Manage accounts',
+    page_sub_analytics: '7-day KPIs and activity',
+    page_sub_history: 'Filters, search, export (demo)',
+    page_sub_settings: 'Knowledge base & tone are real; schedule/webhook are demo',
+
+    refresh: 'Refresh',
+    overview_recent: 'Recent sessions',
+    overview_users_foot: 'registered in total',
+    overview_messages_foot: 'messages in the system',
+    overview_sessions_foot: 'unique dialogs',
+    sessions: 'Sessions',
+    thread_pick: 'Pick a session',
+    thread_empty: 'Pick a session on the left to see the transcript.',
+    thread_loading: 'Loading…',
+    thread_none: 'No messages in this session yet.',
+    thread_error: (msg) => `Failed to load: ${msg}`,
+    thread_messages_count: (n) => `${n} messages`,
+    sessions_none: 'No sessions yet.',
+
+    user_add: '+ Add',
+    user_new: 'New user',
+    user_edit: 'Edit user',
+    user_created: 'Created',
+    user_edit_btn: 'Edit',
+    user_delete_btn: 'Delete',
+    user_cancel: 'Cancel',
+    user_save: 'Save',
+    user_create: 'Create',
+    user_none: 'No users yet.',
+    user_loading: 'Loading…',
+    user_delete_confirm: 'Delete this user?',
+    user_deleted: 'User deleted',
+    user_changes_saved: 'Changes saved',
+    user_created_toast: 'User created',
+    user_fill_required: 'Fill in a name or email',
+    field_name: 'Name',
+    field_email: 'Email',
+
+    kpi_dialogs_today: 'Dialogs today',
+    kpi_dialogs_today_foot: 'today',
+    kpi_conversion: 'Lead conversion',
+    kpi_conversion_foot: 'dialog → contact left',
+    kpi_response_time: 'Avg. response time',
+    kpi_response_time_foot: 'user → bot',
+    kpi_active_bots: 'Active bots',
+    kpi_active_bots_foot: 'connected to Telegram',
+    analytics_chart_title: '7-day activity',
+    analytics_chart_note: 'real data from the database',
+
+    history_export: 'Export CSV',
+    history_search_ph: 'Search by name or phone…',
+    history_none: 'Nothing matches this filter.',
+    history_csv_done: 'CSV downloaded',
+    status_all: 'All statuses', status_new: 'New', status_qualified: 'Qualified',
+    status_booked: 'Booked', status_lost: 'Lost',
+
+    settings_kb: 'Knowledge base',
+    settings_kb_ph: 'Product facts, pricing, answers to common questions…',
+    settings_tone: 'Tone of voice',
+    tone_business: 'Business', tone_friendly: 'Friendly', tone_sales: 'Sales',
+    settings_schedule: "Bot's working hours",
+    schedule_from: 'From', schedule_to: 'To',
+    schedule_hint: 'Days off — buttons above are disabled.',
+    day_mon: 'Mo', day_tue: 'Tu', day_wed: 'We', day_thu: 'Th', day_fri: 'Fr', day_sat: 'Sa', day_sun: 'Su',
+    settings_webhook: 'CRM webhook',
+    webhook_test: 'Send test request',
+    webhook_missing: 'Enter a Webhook URL first',
+    webhook_sent: 'Request sent (check the log on the CRM side)',
+    webhook_failed: (msg) => `Failed to send request: ${msg}`,
+    settings_save: 'Save settings',
+    settings_saved: (time) => `Saved: ${time}`,
+    settings_saved_toast: 'Settings saved',
+    settings_load_failed: (msg) => `Failed to load settings: ${msg}`,
+  },
+};
+
+const LANG_STORAGE_KEY = 'aegis_admin_lang';
+let currentLang = (() => {
+  try {
+    const saved = localStorage.getItem(LANG_STORAGE_KEY);
+    return saved === 'en' || saved === 'uk' ? saved : 'uk';
+  } catch {
+    return 'uk';
+  }
+})();
+
+/** t('key') for plain strings, t('key', arg) for the function-valued entries above. */
+function t(key, ...args) {
+  const entry = TRANSLATIONS[currentLang][key];
+  if (typeof entry === 'function') return entry(...args);
+  return entry !== undefined ? entry : key;
+}
+
+function applyLang(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  try { localStorage.setItem(LANG_STORAGE_KEY, lang); } catch { /* best-effort */ }
+
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.getAttribute('data-i18n');
+    if (TRANSLATIONS[lang][key] !== undefined) el.textContent = TRANSLATIONS[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (TRANSLATIONS[lang][key] !== undefined) el.placeholder = TRANSLATIONS[lang][key];
+  });
+  document.querySelectorAll('.lang-switcher').forEach((sw) => {
+    sw.setAttribute('data-active', lang);
+    sw.querySelectorAll('.lang-btn').forEach((b) => b.classList.toggle('active', b.dataset.lang === lang));
+  });
+
+  // Re-render whatever's currently on screen so already-rendered dynamic
+  // text (toasts aside — those are transient) picks up the new language too,
+  // not just the static markup covered by data-i18n above.
+  if (!appView.hidden) {
+    const activeBtn = document.querySelector('.nav-item.active');
+    if (activeBtn) {
+      pageTitle.textContent = t(`nav_${activeBtn.dataset.view}`);
+      pageSubtitle.textContent = t(`page_sub_${activeBtn.dataset.view}`);
+      const view = activeBtn.dataset.view;
+      if (view === 'overview') loadOverview();
+      if (view === 'conversations') loadSessions();
+      if (view === 'users') loadUsers();
+      if (view === 'analytics') loadAnalytics();
+      if (view === 'history') loadHistory();
+      if (view === 'settings') loadSettings();
+    }
+    if (isMockSession) {
+      document.getElementById('conn-label').textContent = t('conn_demo', currentRole);
+    } else {
+      const dot = document.getElementById('conn-dot');
+      setConnStatus(dot.classList.contains('online'));
+    }
+  }
+}
+
+document.querySelectorAll('.lang-btn').forEach((btn) => {
+  btn.addEventListener('click', () => applyLang(btn.getAttribute('data-lang')));
+});
 
 let adminKey = sessionStorage.getItem(STORAGE_KEY) || '';
 let currentRole = sessionStorage.getItem(ROLE_STORAGE_KEY) || 'admin';
@@ -114,8 +371,8 @@ async function tryLogin(key) {
   } catch (err) {
     adminKey = '';
     loginError.textContent = err.status === 401 || err.status === 403
-      ? 'Невірний Admin Key.'
-      : `Не вдалося з'єднатись: ${err.message}`;
+      ? t('login_error_invalid')
+      : t('login_error_connect', err.message);
     loginError.hidden = false;
   }
 }
@@ -159,7 +416,7 @@ function showApp() {
   applyRoleVisibility();
   if (isMockSession) {
     setConnStatus(true);
-    document.getElementById('conn-label').textContent = `Демо-режим · ${currentRole === 'admin' ? 'Admin' : 'Manager'}`;
+    document.getElementById('conn-label').textContent = t('conn_demo', currentRole);
     const active = document.querySelector('.nav-item.active');
     if (active && !active.hidden) {
       active.click();
@@ -178,7 +435,7 @@ function setConnStatus(online) {
   const label = document.getElementById('conn-label');
   dot.classList.toggle('online', online);
   dot.classList.toggle('offline', !online);
-  label.textContent = online ? "З'єднано" : "Немає з'єднання";
+  label.textContent = online ? t('conn_online') : t('conn_offline');
 }
 
 /* ============================================================
@@ -189,23 +446,14 @@ const views = document.querySelectorAll('.view');
 const pageTitle = document.getElementById('page-title');
 const pageSubtitle = document.getElementById('page-subtitle');
 
-const PAGE_META = {
-  overview: { title: 'Огляд', subtitle: 'Стан асистента у реальному часі' },
-  conversations: { title: 'Діалоги', subtitle: 'Історія листування з користувачами' },
-  users: { title: 'Користувачі', subtitle: 'Керування обліковими записами' },
-  analytics: { title: 'Аналітика', subtitle: 'KPI та активність за 7 днів (демо)' },
-  history: { title: 'Історія діалогів', subtitle: 'Фільтри, пошук, експорт (демо)' },
-  settings: { title: 'Налаштування бота', subtitle: 'База знань, тон, розклад, webhook (демо)' },
-};
-
 navItems.forEach((btn) => {
   btn.addEventListener('click', () => {
     if (btn.hidden) return;
     const view = btn.dataset.view;
     navItems.forEach((b) => b.classList.toggle('active', b === btn));
     views.forEach((v) => v.classList.toggle('active', v.id === `view-${view}`));
-    pageTitle.textContent = PAGE_META[view].title;
-    pageSubtitle.textContent = PAGE_META[view].subtitle;
+    pageTitle.textContent = t(`nav_${view}`);
+    pageSubtitle.textContent = t(`page_sub_${view}`);
 
     if (view === 'overview') loadOverview();
     if (view === 'conversations') loadSessions();
@@ -294,13 +542,13 @@ function formatTime(value) {
   if (!value) return '';
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString('uk-UA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString(currentLang === 'en' ? 'en-GB' : 'uk-UA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
 function renderSessionList(container, sessions, clickable = true) {
   container.innerHTML = '';
   if (!sessions.length) {
-    container.innerHTML = '<div class="empty-state"><p>Сесій ще немає.</p></div>';
+    container.innerHTML = `<div class="empty-state"><p>${t('sessions_none')}</p></div>`;
     return;
   }
   sessions.forEach((s) => {
@@ -330,13 +578,13 @@ function renderSessionList(container, sessions, clickable = true) {
 
 async function loadSessions() {
   const container = document.getElementById('session-list');
-  container.innerHTML = '<div class="empty-state"><p>Завантаження…</p></div>';
+  container.innerHTML = `<div class="empty-state"><p>${t('thread_loading')}</p></div>`;
   try {
     const json = await apiFetch('/admin/sessions');
     const sessions = unwrapArray(json);
     renderSessionList(container, sessions, true);
   } catch (err) {
-    container.innerHTML = `<div class="empty-state"><p>Помилка завантаження: ${escapeHtml(err.message)}</p></div>`;
+    container.innerHTML = `<div class="empty-state"><p>${t('thread_error', escapeHtml(err.message))}</p></div>`;
     showToast(err.message, 'error');
   }
 }
@@ -348,15 +596,15 @@ async function selectSession(sessionId, rowEl) {
 
   document.getElementById('thread-title').textContent = sessionId;
   const thread = document.getElementById('thread');
-  thread.innerHTML = '<div class="empty-state"><p>Завантаження…</p></div>';
+  thread.innerHTML = `<div class="empty-state"><p>${t('thread_loading')}</p></div>`;
 
   try {
     const json = await apiFetch(`/admin/messages?sessionId=${encodeURIComponent(sessionId)}`);
     const messages = unwrapArray(json);
-    document.getElementById('thread-meta').textContent = `${messages.length} повідомлень`;
+    document.getElementById('thread-meta').textContent = t('thread_messages_count', messages.length);
 
     if (!messages.length) {
-      thread.innerHTML = '<div class="empty-state"><p>У цій сесії ще немає повідомлень.</p></div>';
+      thread.innerHTML = `<div class="empty-state"><p>${t('thread_none')}</p></div>`;
       return;
     }
 
@@ -374,22 +622,26 @@ async function selectSession(sessionId, rowEl) {
     });
     thread.scrollTop = thread.scrollHeight;
   } catch (err) {
-    thread.innerHTML = `<div class="empty-state"><p>Помилка завантаження: ${escapeHtml(err.message)}</p></div>`;
+    thread.innerHTML = `<div class="empty-state"><p>${t('thread_error', escapeHtml(err.message))}</p></div>`;
   }
 }
 
 /* ============================================================
    USERS (CRUD)
    ============================================================ */
+function userFieldLabel(key) {
+  return key === 'name' ? t('field_name') : key === 'email' ? t('field_email') : key;
+}
+
 async function loadUsers() {
   const tbody = document.getElementById('users-tbody');
-  tbody.innerHTML = '<tr><td colspan="99" class="muted">Завантаження…</td></tr>';
+  tbody.innerHTML = `<tr><td colspan="99" class="muted">${t('user_loading')}</td></tr>`;
   try {
     const json = await apiFetch('/users');
     const users = unwrapArray(json);
     renderUsersTable(users);
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="99" class="muted">Помилка завантаження: ${escapeHtml(err.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="99" class="muted">${t('thread_error', escapeHtml(err.message))}</td></tr>`;
     showToast(err.message, 'error');
   }
 }
@@ -400,12 +652,12 @@ function renderUsersTable(users) {
 
   const columns = USER_FIELDS.map((f) => f.key);
   theadRow.innerHTML =
-    USER_FIELDS.map((f) => `<th>${escapeHtml(f.label)}</th>`).join('') +
-    '<th>Створено</th><th></th>';
+    columns.map((c) => `<th>${escapeHtml(userFieldLabel(c))}</th>`).join('') +
+    `<th>${t('user_created')}</th><th></th>`;
 
   tbody.innerHTML = '';
   if (!users.length) {
-    tbody.innerHTML = `<tr><td colspan="${columns.length + 2}" class="muted">Користувачів ще немає.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${columns.length + 2}" class="muted">${t('user_none')}</td></tr>`;
     return;
   }
 
@@ -413,11 +665,11 @@ function renderUsersTable(users) {
     const id = u._id || u.id;
     const tr = document.createElement('tr');
     tr.innerHTML =
-      columns.map((c, i) => `<td data-label="${escapeHtml(USER_FIELDS[i].label)}">${escapeHtml(u[c] ?? '—')}</td>`).join('') +
-      `<td class="muted" data-label="Створено">${formatTime(u.createdAt) || '—'}</td>` +
+      columns.map((c) => `<td data-label="${escapeHtml(userFieldLabel(c))}">${escapeHtml(u[c] ?? '—')}</td>`).join('') +
+      `<td class="muted" data-label="${escapeHtml(t('user_created'))}">${formatTime(u.createdAt) || '—'}</td>` +
       `<td class="row-actions">
-        <button class="icon-btn" data-edit="${id}">Редагувати</button>
-        <button class="icon-btn danger" data-delete="${id}">Видалити</button>
+        <button class="icon-btn" data-edit="${id}">${t('user_edit_btn')}</button>
+        <button class="icon-btn danger" data-delete="${id}">${t('user_delete_btn')}</button>
       </td>`;
     tbody.appendChild(tr);
 
@@ -427,10 +679,10 @@ function renderUsersTable(users) {
 }
 
 async function deleteUser(id) {
-  if (!confirm('Видалити цього користувача?')) return;
+  if (!confirm(t('user_delete_confirm'))) return;
   try {
     await apiFetch(`/users/${id}`, { method: 'DELETE' });
-    showToast('Користувача видалено', 'success');
+    showToast(t('user_deleted'), 'success');
     loadUsers();
   } catch (err) {
     showToast(err.message, 'error');
@@ -445,19 +697,20 @@ const modalTitle = document.getElementById('modal-title');
 function buildUserForm(existing) {
   userForm.innerHTML = USER_FIELDS.map((f) => {
     const value = existing ? (existing[f.key] ?? '') : '';
+    const label = userFieldLabel(f.key);
     if (f.type === 'select') {
       const opts = f.options.map((o) =>
         `<option value="${o}" ${value === o ? 'selected' : ''}>${o}</option>`
       ).join('');
-      return `<div class="field"><label>${f.label}</label>
+      return `<div class="field"><label>${label}</label>
         <select name="${f.key}" ${f.required ? 'required' : ''}>${opts}</select></div>`;
     }
-    return `<div class="field"><label>${f.label}</label>
+    return `<div class="field"><label>${label}</label>
       <input type="${f.type}" name="${f.key}" value="${escapeHtml(value)}" ${f.required ? 'required' : ''}></div>`;
   }).join('') + `
     <div class="modal-actions">
-      <button type="button" class="btn-ghost" id="modal-cancel">Скасувати</button>
-      <button type="submit" class="btn btn-primary">${existing ? 'Зберегти' : 'Створити'}</button>
+      <button type="button" class="btn-ghost" id="modal-cancel">${t('user_cancel')}</button>
+      <button type="submit" class="btn btn-primary">${existing ? t('user_save') : t('user_create')}</button>
     </div>
   `;
   userForm.querySelector('#modal-cancel').addEventListener('click', closeUserModal);
@@ -465,7 +718,7 @@ function buildUserForm(existing) {
 
 function openUserModal(existing = null) {
   editingUserId = existing ? (existing._id || existing.id) : null;
-  modalTitle.textContent = existing ? 'Редагувати користувача' : 'Новий користувач';
+  modalTitle.textContent = existing ? t('user_edit') : t('user_new');
   buildUserForm(existing);
   userModal.hidden = false;
 }
@@ -489,17 +742,17 @@ userForm.addEventListener('submit', async (e) => {
   });
 
   if (!Object.keys(payload).length) {
-    showToast("Заповніть ім'я або email", 'error');
+    showToast(t('user_fill_required'), 'error');
     return;
   }
 
   try {
     if (editingUserId) {
       await apiFetch(`/users/${editingUserId}`, { method: 'PATCH', body: JSON.stringify(payload) });
-      showToast('Зміни збережено', 'success');
+      showToast(t('user_changes_saved'), 'success');
     } else {
       await apiFetch('/users', { method: 'POST', body: JSON.stringify(payload) });
-      showToast('Користувача створено', 'success');
+      showToast(t('user_created_toast'), 'success');
     }
     closeUserModal();
     loadUsers();
@@ -584,45 +837,9 @@ function renderUserText(value) {
 }
 
 /* ============================================================
-   ANALYTICS (mock KPIs + 7-day sparkline)
-   ------------------------------------------------------------
-   No backend for this tab: numbers are generated once per day
-   (seeded by today's date, so refreshing doesn't jump around)
-   and cached in localStorage.
+   ANALYTICS — real data from /api/admin/analytics (see routes/admin.js)
    ============================================================ */
-function seededRandom(seed) {
-  let s = seed % 2147483647;
-  if (s <= 0) s += 2147483646;
-  return () => {
-    s = (s * 16807) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
-function dateSeed(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
-  return h || 1;
-}
-
-function getMockAnalytics() {
-  const todayKey = new Date().toISOString().slice(0, 10);
-  const cacheKey = `mock_analytics_${todayKey}`;
-  const cached = localStorage.getItem(cacheKey);
-  if (cached) return JSON.parse(cached);
-
-  const rand = seededRandom(dateSeed(todayKey));
-  const week = Array.from({ length: 7 }, () => Math.round(24 + rand() * 60));
-  const data = {
-    dialogsToday: week[week.length - 1],
-    conversionRate: Math.round((18 + rand() * 16) * 10) / 10,
-    avgResponseSeconds: Math.round((1.2 + rand() * 2.4) * 10) / 10,
-    activeBots: 1,
-    week,
-  };
-  localStorage.setItem(cacheKey, JSON.stringify(data));
-  return data;
-}
+const DAY_KEYS = ['day_sun', 'day_mon', 'day_tue', 'day_wed', 'day_thu', 'day_fri', 'day_sat'];
 
 function renderSparkline(container, values) {
   const w = 640, h = 160, pad = 10;
@@ -636,9 +853,8 @@ function renderSparkline(container, values) {
   });
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
   const areaPath = `${linePath} L${points[points.length - 1][0].toFixed(1)},${h - pad} L${points[0][0].toFixed(1)},${h - pad} Z`;
-  const days = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
   const todayIdx = new Date().getDay();
-  const labels = Array.from({ length: 7 }, (_, i) => days[(todayIdx - 6 + i + 70) % 7]);
+  const labels = Array.from({ length: 7 }, (_, i) => t(DAY_KEYS[(todayIdx - 6 + i + 70) % 7]));
 
   container.innerHTML = `
     <svg viewBox="0 0 ${w} ${h}" class="sparkline" preserveAspectRatio="none">
@@ -656,13 +872,18 @@ function renderSparkline(container, values) {
   `;
 }
 
-function loadAnalytics() {
-  const data = getMockAnalytics();
-  document.getElementById('kpi-dialogs-today').textContent = data.dialogsToday;
-  document.getElementById('kpi-conversion').textContent = `${data.conversionRate}%`;
-  document.getElementById('kpi-response-time').textContent = `${data.avgResponseSeconds}с`;
-  document.getElementById('kpi-active-bots').textContent = data.activeBots;
-  renderSparkline(document.getElementById('activity-chart'), data.week);
+async function loadAnalytics() {
+  try {
+    const json = await apiFetch('/admin/analytics');
+    const data = unwrapObject(json);
+    document.getElementById('kpi-dialogs-today').textContent = data.dialogsToday ?? 0;
+    document.getElementById('kpi-conversion').textContent = `${data.conversionRate ?? 0}%`;
+    document.getElementById('kpi-response-time').textContent = `${data.avgResponseSeconds ?? 0}с`.replace('с', currentLang === 'en' ? 's' : 'с');
+    document.getElementById('kpi-active-bots').textContent = data.activeBots ?? 0;
+    renderSparkline(document.getElementById('activity-chart'), data.week?.length ? data.week : [0, 0, 0, 0, 0, 0, 0]);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 }
 
 /* ============================================================
@@ -698,7 +919,7 @@ const MOCK_DIALOGS = [
     { role: 'bot', text: 'Зазвичай 1-2 дні на базове налаштування бота.' },
   ]},
 ];
-const STATUS_LABELS = { new: 'Новий', qualified: 'Кваліфікований', booked: 'Записаний', lost: 'Втрачений' };
+function statusLabel(status) { return t(`status_${status}`); }
 let historyInitialized = false;
 
 function filteredMockDialogs() {
@@ -717,7 +938,7 @@ function renderHistoryList() {
   const container = document.getElementById('history-list');
   const dialogs = filteredMockDialogs();
   if (!dialogs.length) {
-    container.innerHTML = '<div class="empty-state"><p>Нічого не знайдено за цим фільтром.</p></div>';
+    container.innerHTML = `<div class="empty-state"><p>${t('history_none')}</p></div>`;
     return;
   }
   container.innerHTML = dialogs.map((d) => `
@@ -728,7 +949,7 @@ function renderHistoryList() {
           <span class="history-phone muted">${escapeHtml(d.phone)}</span>
         </div>
         <div class="history-card-meta">
-          <span class="status-badge status-${d.status}">${STATUS_LABELS[d.status]}</span>
+          <span class="status-badge status-${d.status}">${statusLabel(d.status)}</span>
           <span class="session-time">${d.date}</span>
         </div>
       </div>
@@ -748,8 +969,10 @@ function renderHistoryList() {
 
 function exportHistoryToCsv() {
   const dialogs = filteredMockDialogs();
-  const header = ['Ім\'я', 'Телефон', 'Статус', 'Дата'];
-  const rows = dialogs.map((d) => [d.name, d.phone, STATUS_LABELS[d.status], d.date]);
+  const header = currentLang === 'en'
+    ? ['Name', 'Phone', 'Status', 'Date']
+    : ["Ім'я", 'Телефон', 'Статус', 'Дата'];
+  const rows = dialogs.map((d) => [d.name, d.phone, statusLabel(d.status), d.date]);
   const csv = [header, ...rows]
     .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
     .join('\n');
@@ -760,7 +983,7 @@ function exportHistoryToCsv() {
   a.download = `dialogs-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
-  showToast('CSV завантажено', 'success');
+  showToast(t('history_csv_done'), 'success');
 }
 
 function loadHistory() {
@@ -775,34 +998,46 @@ function loadHistory() {
 }
 
 /* ============================================================
-   BOT SETTINGS (mock, admin only — persisted to localStorage)
+   BOT SETTINGS
+   ------------------------------------------------------------
+   Knowledge base + tone are real now — GET/PUT /api/admin/settings,
+   read straight into buildSystemPrompt() on the server (see
+   src/services/openaiService.js). Schedule + webhook stay
+   localStorage/demo for this round (no bot-side enforcement yet —
+   see conversation history for why that's scoped separately).
    ============================================================ */
-const SETTINGS_STORAGE_KEY = 'bot_settings';
+const LOCAL_SETTINGS_KEY = 'bot_settings_local'; // schedule + webhook only
 let settingsInitialized = false;
 
-function getStoredSettings() {
+function getLocalSettings() {
   try {
-    return JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY)) || {};
+    return JSON.parse(localStorage.getItem(LOCAL_SETTINGS_KEY)) || {};
   } catch (_) {
     return {};
   }
 }
 
-function loadSettings() {
-  const s = getStoredSettings();
-  document.getElementById('settings-kb').value = s.knowledgeBase || '';
-  document.getElementById('settings-tone').value = s.tone || 'business';
-  document.getElementById('settings-hours-from').value = s.hoursFrom || '09:00';
-  document.getElementById('settings-hours-to').value = s.hoursTo || '18:00';
-  document.getElementById('settings-webhook').value = s.webhookUrl || '';
+async function loadSettings() {
+  const local = getLocalSettings();
+  document.getElementById('settings-hours-from').value = local.hoursFrom || '09:00';
+  document.getElementById('settings-hours-to').value = local.hoursTo || '18:00';
+  document.getElementById('settings-webhook').value = local.webhookUrl || '';
 
-  const activeDays = s.weekdays || ['1', '2', '3', '4', '5'];
+  const activeDays = local.weekdays || ['1', '2', '3', '4', '5'];
   document.querySelectorAll('#settings-weekdays button').forEach((btn) => {
     btn.classList.toggle('active', activeDays.includes(btn.dataset.day));
   });
 
-  if (s.savedAt) {
-    document.getElementById('settings-saved-at').textContent = `Збережено: ${formatTime(s.savedAt)}`;
+  try {
+    const json = await apiFetch('/admin/settings');
+    const remote = unwrapObject(json);
+    document.getElementById('settings-kb').value = remote.knowledgeBase || '';
+    document.getElementById('settings-tone').value = remote.tone || 'business';
+    if (remote.updatedAt) {
+      document.getElementById('settings-saved-at').textContent = t('settings_saved', formatTime(remote.updatedAt));
+    }
+  } catch (err) {
+    showToast(t('settings_load_failed', err.message), 'error');
   }
 
   if (!settingsInitialized) {
@@ -810,26 +1045,35 @@ function loadSettings() {
       btn.addEventListener('click', () => btn.classList.toggle('active'));
     });
 
-    document.getElementById('settings-save-btn').addEventListener('click', () => {
+    document.getElementById('settings-save-btn').addEventListener('click', async () => {
       const weekdays = Array.from(document.querySelectorAll('#settings-weekdays button.active'))
         .map((b) => b.dataset.day);
-      const payload = {
-        knowledgeBase: document.getElementById('settings-kb').value,
-        tone: document.getElementById('settings-tone').value,
+      localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify({
         hoursFrom: document.getElementById('settings-hours-from').value,
         hoursTo: document.getElementById('settings-hours-to').value,
         weekdays,
         webhookUrl: document.getElementById('settings-webhook').value.trim(),
-        savedAt: new Date().toISOString(),
-      };
-      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(payload));
-      document.getElementById('settings-saved-at').textContent = `Збережено: ${formatTime(payload.savedAt)}`;
-      showToast('Налаштування збережено', 'success');
+      }));
+
+      try {
+        const json = await apiFetch('/admin/settings', {
+          method: 'PUT',
+          body: JSON.stringify({
+            knowledgeBase: document.getElementById('settings-kb').value,
+            tone: document.getElementById('settings-tone').value,
+          }),
+        });
+        const saved = unwrapObject(json);
+        document.getElementById('settings-saved-at').textContent = t('settings_saved', formatTime(saved.updatedAt || new Date()));
+        showToast(t('settings_saved_toast'), 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
     });
 
     document.getElementById('settings-webhook-test').addEventListener('click', async () => {
       const url = document.getElementById('settings-webhook').value.trim();
-      if (!url) { showToast('Спочатку вкажіть Webhook URL', 'error'); return; }
+      if (!url) { showToast(t('webhook_missing'), 'error'); return; }
       try {
         await fetch(url, {
           method: 'POST',
@@ -837,9 +1081,9 @@ function loadSettings() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ event: 'test', source: 'aegis-admin', sentAt: new Date().toISOString() }),
         });
-        showToast('Запит надіслано (перевірте лог на боці CRM)', 'success');
+        showToast(t('webhook_sent'), 'success');
       } catch (err) {
-        showToast(`Не вдалося надіслати запит: ${err.message}`, 'error');
+        showToast(t('webhook_failed', err.message), 'error');
       }
     });
 
@@ -863,6 +1107,7 @@ function escapeHtml(value) {
    INIT
    ============================================================ */
 (function init() {
+  applyLang(currentLang);
   if (adminKey) {
     tryLogin(adminKey);
   }
