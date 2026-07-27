@@ -134,7 +134,7 @@ function startBot() {
 
       await saveMessage('user', text, sessionId);
 
-      const aiResponse = await getChatReply(text, firstName);
+      const aiResponse = await getChatReply(text, firstName, sessionId);
 
       clearInterval(typingInterval);
 
