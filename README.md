@@ -7,6 +7,12 @@ analytics, all backed by a real LLM.
 
 Live demo: [smart-ai-assistant-for-business-admin.onrender.com](https://smart-ai-assistant-for-business-admin.onrender.com)
 
+**Try the admin panel without any credentials** — open `/admin.html` and log
+in with `demo-admin-2024` (full read/write demo, changes aren't persisted)
+or `demo-manager-2024` (read-only). Both run entirely client-side against
+fixture data, no database or API key required — the fastest way to see the
+dashboard without asking for real access.
+
 ## Features
 
 **Customer-facing**
@@ -24,6 +30,7 @@ Live demo: [smart-ai-assistant-for-business-admin.onrender.com](https://smart-ai
 - **Analytics** — 7-day activity chart, real lead-conversion rate, average bot response time
 - **Dialog history** — every session with filters (search/status/date), manual lead-status override, CSV export, and a one-click "clear all history" reset
 - **Bot settings** — knowledge base, tone of voice (business/friendly/sales), working-hours schedule, and a CRM webhook (fires on every new lead, with a live test button)
+- Two-role demo mode (`demo-admin-2024` full access / `demo-manager-2024` read-only) for exploring the UI with zero backend setup
 
 **Lead status tracking** — every session is auto-tagged `new` → `qualified` /
 `booked` / `lost` by the LLM itself (a hidden marker on its own reply, parsed
@@ -99,6 +106,13 @@ public/
   index.html, chat-widget.{js,css}   landing page + embeddable widget
   admin.html, admin.{js,css}          admin dashboard
 ```
+
+## Roadmap
+
+Not built yet:
+- Per-channel breakdown (web widget vs. Telegram) on the analytics chart
+- Date-range picker for analytics (currently a fixed 7-day window)
+- CSV/export for the KPI cards, matching the Dialog history export
 
 ## Security notes
 
