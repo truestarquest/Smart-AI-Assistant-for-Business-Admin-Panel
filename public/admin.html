@@ -237,7 +237,7 @@
         </div>
       </section>
 
-      <!-- ---- HISTORY (mock dialogs — separate demo tab, see README) ---- -->
+      <!-- ---- HISTORY (real sessions, see src/routes/admin.js GET /sessions) ---- -->
       <section id="view-history" class="view">
         <div class="panel">
           <div class="panel-head">
@@ -245,7 +245,7 @@
             <button class="btn btn-primary small" id="history-export-btn" data-i18n="history_export">Експорт у CSV</button>
           </div>
           <div class="history-filters">
-            <input type="text" id="history-search" data-i18n-placeholder="history_search_ph" placeholder="Пошук за ім'ям або телефоном…">
+            <input type="text" id="history-search" data-i18n-placeholder="history_search_ph" placeholder="Пошук за сесією або повідомленням…">
             <select id="history-status-filter">
               <option value="" data-i18n="status_all">Усі статуси</option>
               <option value="new" data-i18n="status_new">Новий</option>

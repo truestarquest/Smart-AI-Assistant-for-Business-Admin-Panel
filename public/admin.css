@@ -592,7 +592,7 @@ input::placeholder { color: var(--text-faint); }
   font-family: var(--font-mono);
 }
 
-/* ---- history (mock dialogs) ---- */
+/* ---- history ---- */
 .history-filters {
   display: flex;
   gap: 10px;
@@ -602,6 +602,15 @@ input::placeholder { color: var(--text-faint); }
 }
 .history-filters input,
 .history-filters select { flex: 1; min-width: 160px; }
+.status-select {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  color: inherit;
+  font-size: 12px;
+  padding: 3px 6px;
+  cursor: pointer;
+}
 .history-list { max-height: 600px; overflow-y: auto; }
 .history-card { border-bottom: 1px solid rgba(255,255,255,0.04); }
 .history-card-head {

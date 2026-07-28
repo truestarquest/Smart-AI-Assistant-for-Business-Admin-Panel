@@ -53,7 +53,8 @@ const TRANSLATIONS = {
     page_sub_conversations: 'Історія листування з користувачами',
     page_sub_users: 'Керування обліковими записами',
     page_sub_analytics: 'KPI та активність за 7 днів',
-    page_sub_history: 'Фільтри, пошук, експорт (демо)',
+    page_sub_history: 'Фільтри, пошук, експорт CSV',
+    history_status_updated: 'Статус оновлено',
     page_sub_settings: 'База знань, тон, розклад і webhook — усі реальні',
     analytics_no_activity: 'Активності не було за цей період',
 
@@ -102,7 +103,7 @@ const TRANSLATIONS = {
     analytics_chart_note: 'реальні дані з бази',
 
     history_export: 'Експорт у CSV',
-    history_search_ph: "Пошук за ім'ям або телефоном…",
+    history_search_ph: 'Пошук за сесією або повідомленням…',
     history_none: 'Нічого не знайдено за цим фільтром.',
     history_csv_done: 'CSV завантажено',
     status_all: 'Усі статуси', status_new: 'Новий', status_qualified: 'Кваліфікований',
@@ -146,7 +147,8 @@ const TRANSLATIONS = {
     page_sub_conversations: 'Message history with users',
     page_sub_users: 'Manage accounts',
     page_sub_analytics: '7-day KPIs and activity',
-    page_sub_history: 'Filters, search, export (demo)',
+    page_sub_history: 'Filters, search, CSV export',
+    history_status_updated: 'Status updated',
     page_sub_settings: 'Knowledge base, tone, schedule & webhook are all real',
     analytics_no_activity: 'No activity in this period',
 
@@ -195,7 +197,7 @@ const TRANSLATIONS = {
     analytics_chart_note: 'real data from the database',
 
     history_export: 'Export CSV',
-    history_search_ph: 'Search by name or phone…',
+    history_search_ph: 'Search by session or message…',
     history_none: 'Nothing matches this filter.',
     history_csv_done: 'CSV downloaded',
     status_all: 'All statuses', status_new: 'New', status_qualified: 'Qualified',
@@ -898,90 +900,115 @@ async function loadAnalytics() {
 /* ============================================================
    HISTORY (mock dialogs — filters, search, CSV export)
    ============================================================ */
-const MOCK_DIALOGS = [
-  { id: 'd1', name: 'Олена Ковальчук', phone: '+380 67 123 4567', status: 'booked', date: '2026-07-24', messages: [
-    { role: 'user', text: 'Привіт, скільки коштує базовий тариф?' },
-    { role: 'bot', text: 'Вітаю! Базовий тариф — $29/міс, включає до 200 діалогів.' },
-    { role: 'user', text: 'Добре, хочу записатись на демо' },
-    { role: 'bot', text: 'Чудово, ось посилання для запису: t.me/aegis_demo' },
-  ]},
-  { id: 'd2', name: 'Дмитро Іваненко', phone: '+380 50 987 6543', status: 'qualified', date: '2026-07-25', messages: [
-    { role: 'user', text: 'Чи інтегрується з Telegram?' },
-    { role: 'bot', text: 'Так, через One-Time Deep Links — клієнт переходить у ваш бот одразу з контекстом розмови.' },
-  ]},
-  { id: 'd3', name: 'Марія Соколова', phone: '+380 63 555 1122', status: 'new', date: '2026-07-26', messages: [
-    { role: 'user', text: 'Добрий день' },
-    { role: 'bot', text: 'Вітаю! Чим можу допомогти?' },
-  ]},
-  { id: 'd4', name: 'Андрій Петренко', phone: '+380 99 222 3344', status: 'lost', date: '2026-07-20', messages: [
-    { role: 'user', text: 'А є безкоштовний період?' },
-    { role: 'bot', text: 'Пробний період — 14 днів, без картки.' },
-    { role: 'user', text: 'Занадто дорого для нас, дякую' },
-  ]},
-  { id: 'd5', name: 'Ірина Бондаренко', phone: '+380 68 444 5566', status: 'booked', date: '2026-07-23', messages: [
-    { role: 'user', text: 'Потрібна інтеграція з нашою CRM' },
-    { role: 'bot', text: 'Підтримуємо webhook — налаштовується в адмін-панелі за 2 хвилини.' },
-    { role: 'user', text: 'Записуйте нас на дзвінок' },
-  ]},
-  { id: 'd6', name: 'Сергій Мельник', phone: '+380 96 777 8899', status: 'qualified', date: '2026-07-22', messages: [
-    { role: 'user', text: 'Скільки часу займає впровадження?' },
-    { role: 'bot', text: 'Зазвичай 1-2 дні на базове налаштування бота.' },
-  ]},
-];
+const STATUS_VALUES = ['new', 'qualified', 'booked', 'lost'];
 function statusLabel(status) { return t(`status_${status}`); }
 let historyInitialized = false;
+let historySessions = []; // fetched once per tab visit, filtered client-side
 
-function filteredMockDialogs() {
+async function fetchHistorySessions() {
+  const json = await apiFetch('/admin/sessions?limit=100');
+  return unwrapArray(json).map((s) => ({
+    id: s.sessionId || s.id,
+    status: s.status || 'new',
+    preview: (typeof s.lastMessage === 'object' && s.lastMessage) ? (s.lastMessage.text || '') : (s.lastMessage || ''),
+    date: (s.lastMessage && s.lastMessage.createdAt) ? s.lastMessage.createdAt : (s.updatedAt || s.createdAt || ''),
+  }));
+}
+
+function filteredHistorySessions() {
   const search = document.getElementById('history-search').value.trim().toLowerCase();
   const status = document.getElementById('history-status-filter').value;
   const date = document.getElementById('history-date-filter').value;
-  return MOCK_DIALOGS.filter((d) => {
+  return historySessions.filter((d) => {
     if (status && d.status !== status) return false;
-    if (date && d.date !== date) return false;
-    if (search && !(`${d.name} ${d.phone}`.toLowerCase().includes(search))) return false;
+    if (date && !String(d.date).slice(0, 10).includes(date)) return false;
+    if (search && !(`${d.id} ${d.preview}`.toLowerCase().includes(search))) return false;
     return true;
   });
 }
 
 function renderHistoryList() {
   const container = document.getElementById('history-list');
-  const dialogs = filteredMockDialogs();
+  const dialogs = filteredHistorySessions();
   if (!dialogs.length) {
     container.innerHTML = `<div class="empty-state"><p>${t('history_none')}</p></div>`;
     return;
   }
   container.innerHTML = dialogs.map((d) => `
-    <div class="history-card" data-id="${d.id}">
+    <div class="history-card" data-id="${escapeHtml(d.id)}">
       <div class="history-card-head">
         <div>
-          <span class="history-name">${escapeHtml(d.name)}</span>
-          <span class="history-phone muted">${escapeHtml(d.phone)}</span>
+          <span class="history-name">${escapeHtml(d.id)}</span>
+          <span class="history-phone muted">${escapeHtml(d.preview).slice(0, 60)}</span>
         </div>
         <div class="history-card-meta">
-          <span class="status-badge status-${d.status}">${statusLabel(d.status)}</span>
-          <span class="session-time">${d.date}</span>
+          <select class="status-select status-${d.status}" data-session-id="${escapeHtml(d.id)}">
+            ${STATUS_VALUES.map((s) => `<option value="${s}" ${s === d.status ? 'selected' : ''}>${statusLabel(s)}</option>`).join('')}
+          </select>
+          <span class="session-time">${formatTime(d.date)}</span>
         </div>
       </div>
-      <div class="history-thread" hidden>
-        ${d.messages.map((m) => `<div class="msg ${m.role === 'user' ? 'msg-user' : 'msg-bot'}">${escapeHtml(m.text)}</div>`).join('')}
-      </div>
+      <div class="history-thread" hidden data-loaded="0"></div>
     </div>
   `).join('');
 
   container.querySelectorAll('.history-card').forEach((card) => {
-    card.querySelector('.history-card-head').addEventListener('click', () => {
-      card.querySelector('.history-thread').hidden = !card.querySelector('.history-thread').hidden;
-      card.classList.toggle('open');
+    const sessionId = card.dataset.id;
+    const threadEl = card.querySelector('.history-thread');
+
+    card.querySelector('.history-card-head').addEventListener('click', async (e) => {
+      if (e.target.closest('.status-select')) return; // don't toggle when interacting with the dropdown
+      const opening = threadEl.hidden;
+      threadEl.hidden = !opening;
+      card.classList.toggle('open', opening);
+      if (opening && threadEl.dataset.loaded !== '1') {
+        threadEl.innerHTML = `<div class="empty-state"><p>${t('thread_loading')}</p></div>`;
+        try {
+          const json = await apiFetch(`/admin/messages?sessionId=${encodeURIComponent(sessionId)}`);
+          const messages = unwrapArray(json);
+          threadEl.innerHTML = messages.length
+            ? messages.map((m) => {
+                const role = m.role === 'user' ? 'user' : 'bot';
+                const body = role === 'user' ? renderUserText(m.text) : renderBotText(m.text);
+                return `<div class="msg ${role === 'user' ? 'msg-user' : 'msg-bot'}">${body}</div>`;
+              }).join('')
+            : `<div class="empty-state"><p>${t('thread_none')}</p></div>`;
+          threadEl.dataset.loaded = '1';
+        } catch (err) {
+          threadEl.innerHTML = `<div class="empty-state"><p>${t('thread_error', escapeHtml(err.message))}</p></div>`;
+        }
+      }
+    });
+
+    card.querySelector('.status-select').addEventListener('click', (e) => e.stopPropagation());
+    card.querySelector('.status-select').addEventListener('change', async (e) => {
+      const select = e.target;
+      const newStatus = select.value;
+      const previousStatus = (historySessions.find((d) => d.id === sessionId) || {}).status;
+      select.className = `status-select status-${newStatus}`;
+      try {
+        await apiFetch(`/admin/sessions/${encodeURIComponent(sessionId)}/status`, {
+          method: 'PUT',
+          body: JSON.stringify({ status: newStatus }),
+        });
+        const local = historySessions.find((d) => d.id === sessionId);
+        if (local) local.status = newStatus;
+        showToast(t('history_status_updated'), 'success');
+      } catch (err) {
+        select.value = previousStatus;
+        select.className = `status-select status-${previousStatus}`;
+        showToast(err.message, 'error');
+      }
     });
   });
 }
 
 function exportHistoryToCsv() {
-  const dialogs = filteredMockDialogs();
+  const dialogs = filteredHistorySessions();
   const header = currentLang === 'en'
-    ? ['Name', 'Phone', 'Status', 'Date']
-    : ["Ім'я", 'Телефон', 'Статус', 'Дата'];
-  const rows = dialogs.map((d) => [d.name, d.phone, statusLabel(d.status), d.date]);
+    ? ['Session', 'Last message', 'Status', 'Date']
+    : ['Сесія', 'Останнє повідомлення', 'Статус', 'Дата'];
+  const rows = dialogs.map((d) => [d.id, d.preview, statusLabel(d.status), formatTime(d.date)]);
   const csv = [header, ...rows]
     .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
     .join('\n');
@@ -995,13 +1022,19 @@ function exportHistoryToCsv() {
   showToast(t('history_csv_done'), 'success');
 }
 
-function loadHistory() {
+async function loadHistory() {
   if (!historyInitialized) {
     document.getElementById('history-search').addEventListener('input', renderHistoryList);
     document.getElementById('history-status-filter').addEventListener('change', renderHistoryList);
     document.getElementById('history-date-filter').addEventListener('change', renderHistoryList);
     document.getElementById('history-export-btn').addEventListener('click', exportHistoryToCsv);
     historyInitialized = true;
+  }
+  try {
+    historySessions = await fetchHistorySessions();
+  } catch (err) {
+    showToast(err.message, 'error');
+    historySessions = [];
   }
   renderHistoryList();
 }
