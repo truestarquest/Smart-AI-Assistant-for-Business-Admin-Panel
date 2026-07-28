@@ -113,9 +113,3 @@ Not built yet:
 - Per-channel breakdown (web widget vs. Telegram) on the analytics chart
 - Date-range picker for analytics (currently a fixed 7-day window)
 - CSV/export for the KPI cards, matching the Dialog history export
-
-## Security notes
-
-- `ADMIN_KEY` is a single static secret (no per-user accounts) — rotate it
-  before any public/portfolio use, and treat it like a password.
-- `.env` is gitignored and was never committed to this repo's history.
