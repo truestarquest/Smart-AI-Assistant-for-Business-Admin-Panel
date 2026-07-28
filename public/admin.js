@@ -106,6 +106,7 @@ const TRANSLATIONS = {
     history_clear: 'Очистити історію',
     history_clear_confirm: 'Видалити ВСЮ історію діалогів та статуси лідів? Це незворотньо.',
     history_clear_done: 'Історію очищено',
+    demo_not_saved: 'Демо-режим: зміни не зберігаються на сервері',
     history_search_ph: 'Пошук за сесією або повідомленням…',
     history_none: 'Нічого не знайдено за цим фільтром.',
     history_csv_done: 'CSV завантажено',
@@ -203,6 +204,7 @@ const TRANSLATIONS = {
     history_clear: 'Clear history',
     history_clear_confirm: 'Delete ALL dialog history and lead statuses? This cannot be undone.',
     history_clear_done: 'History cleared',
+    demo_not_saved: 'Demo mode: changes are not saved to the server',
     history_search_ph: 'Search by session or message…',
     history_none: 'Nothing matches this filter.',
     history_csv_done: 'CSV downloaded',
@@ -418,6 +420,10 @@ function applyRoleVisibility() {
     btn.hidden = !visible;
   });
 
+  // History's own "Clear history" button isn't a nav item — gate it here
+  // too, same read-only rule as the per-row status dropdown.
+  const clearBtn = document.getElementById('history-clear-btn');
+  if (clearBtn) clearBtn.hidden = isMockSession && currentRole === 'manager';
 }
 
 function showApp() {
@@ -904,14 +910,59 @@ async function loadAnalytics() {
 }
 
 /* ============================================================
-   HISTORY (mock dialogs — filters, search, CSV export)
+   HISTORY (real sessions for a real admin key; static fixture data
+   for the demo/mock keys — those aren't a valid backend ADMIN_KEY,
+   so they can't hit the real API at all. See fetchHistorySessions,
+   the thread-load branch, the status-select branch, and the clear-
+   history branch below — all four gate on isMockSession the same way.)
    ============================================================ */
 const STATUS_VALUES = ['new', 'qualified', 'booked', 'lost'];
 function statusLabel(status) { return t(`status_${status}`); }
 let historyInitialized = false;
 let historySessions = []; // fetched once per tab visit, filtered client-side
 
+const MOCK_HISTORY_SESSIONS = [
+  { id: 'demo-anna-kovalchuk',     status: 'booked',    preview: 'Добре, хочу записатись на демо',              date: '2026-07-24T10:12:00Z' },
+  { id: 'demo-dmytro-ivanenko',    status: 'qualified', preview: 'Чи інтегрується з Telegram?',                 date: '2026-07-25T09:03:00Z' },
+  { id: 'demo-maria-sokolova',     status: 'new',       preview: 'Добрий день',                                 date: '2026-07-26T08:15:00Z' },
+  { id: 'demo-andriy-petrenko',    status: 'lost',      preview: 'Занадто дорого для нас, дякую',               date: '2026-07-20T14:47:00Z' },
+  { id: 'demo-iryna-bondarenko',   status: 'booked',    preview: 'Записуйте нас на дзвінок',                    date: '2026-07-23T16:31:00Z' },
+  { id: 'demo-serhiy-melnyk',      status: 'qualified', preview: 'Скільки часу займає впровадження?',           date: '2026-07-22T11:05:00Z' },
+];
+
+const MOCK_HISTORY_THREADS = {
+  'demo-anna-kovalchuk': [
+    { role: 'user', text: 'Привіт, скільки коштує базовий тариф?' },
+    { role: 'bot', text: 'Вітаю! Базовий тариф — $29/міс, включає до 500 діалогів.' },
+    { role: 'user', text: 'Добре, хочу записатись на демо' },
+    { role: 'bot', text: 'Чудово, ось посилання для запису: t.me/aegis_demo' },
+  ],
+  'demo-dmytro-ivanenko': [
+    { role: 'user', text: 'Чи інтегрується з Telegram?' },
+    { role: 'bot', text: 'Так, у нас є повноцінний Telegram-бот з тією ж базою знань, що й на сайті.' },
+  ],
+  'demo-maria-sokolova': [
+    { role: 'user', text: 'Добрий день' },
+    { role: 'bot', text: 'Вітаю! Чим можу допомогти?' },
+  ],
+  'demo-andriy-petrenko': [
+    { role: 'user', text: 'А є безкоштовний період?' },
+    { role: 'bot', text: 'Пробний період — 14 днів, без картки.' },
+    { role: 'user', text: 'Занадто дорого для нас, дякую' },
+  ],
+  'demo-iryna-bondarenko': [
+    { role: 'user', text: 'Потрібна інтеграція з нашою CRM' },
+    { role: 'bot', text: 'Підтримуємо webhook — налаштовується в адмін-панелі за 2 хвилини.' },
+    { role: 'user', text: 'Записуйте нас на дзвінок' },
+  ],
+  'demo-serhiy-melnyk': [
+    { role: 'user', text: 'Скільки часу займає впровадження?' },
+    { role: 'bot', text: 'Зазвичай 1-2 дні на базове налаштування бота.' },
+  ],
+};
+
 async function fetchHistorySessions() {
+  if (isMockSession) return MOCK_HISTORY_SESSIONS.map((d) => ({ ...d }));
   const json = await apiFetch('/admin/sessions?limit=100');
   return unwrapArray(json).map((s) => ({
     id: s.sessionId || s.id,
@@ -940,6 +991,11 @@ function renderHistoryList() {
     container.innerHTML = `<div class="empty-state"><p>${t('history_none')}</p></div>`;
     return;
   }
+  // Demo manager is read-only (matches the real backend: managers don't get
+  // a status-write route today); demo admin can still use the dropdown,
+  // same as it always could, just without persisting (see the isMockSession
+  // branch in the change handler below).
+  const readOnly = isMockSession && currentRole === 'manager';
   container.innerHTML = dialogs.map((d) => `
     <div class="history-card" data-id="${escapeHtml(d.id)}">
       <div class="history-card-head">
@@ -948,7 +1004,7 @@ function renderHistoryList() {
           <span class="history-phone muted">${escapeHtml(d.preview).slice(0, 60)}</span>
         </div>
         <div class="history-card-meta">
-          <select class="status-select status-${d.status}" data-session-id="${escapeHtml(d.id)}">
+          <select class="status-select status-${d.status}" data-session-id="${escapeHtml(d.id)}" ${readOnly ? 'disabled' : ''}>
             ${STATUS_VALUES.map((s) => `<option value="${s}" ${s === d.status ? 'selected' : ''}>${statusLabel(s)}</option>`).join('')}
           </select>
           <span class="session-time">${formatTime(d.date)}</span>
@@ -969,9 +1025,7 @@ function renderHistoryList() {
       card.classList.toggle('open', opening);
       if (opening && threadEl.dataset.loaded !== '1') {
         threadEl.innerHTML = `<div class="empty-state"><p>${t('thread_loading')}</p></div>`;
-        try {
-          const json = await apiFetch(`/admin/messages?sessionId=${encodeURIComponent(sessionId)}`);
-          const messages = unwrapArray(json);
+        const renderThread = (messages) => {
           threadEl.innerHTML = messages.length
             ? messages.map((m) => {
                 const role = m.role === 'user' ? 'user' : 'bot';
@@ -980,8 +1034,16 @@ function renderHistoryList() {
               }).join('')
             : `<div class="empty-state"><p>${t('thread_none')}</p></div>`;
           threadEl.dataset.loaded = '1';
-        } catch (err) {
-          threadEl.innerHTML = `<div class="empty-state"><p>${t('thread_error', escapeHtml(err.message))}</p></div>`;
+        };
+        if (isMockSession) {
+          renderThread(MOCK_HISTORY_THREADS[sessionId] || []);
+        } else {
+          try {
+            const json = await apiFetch(`/admin/messages?sessionId=${encodeURIComponent(sessionId)}`);
+            renderThread(unwrapArray(json));
+          } catch (err) {
+            threadEl.innerHTML = `<div class="empty-state"><p>${t('thread_error', escapeHtml(err.message))}</p></div>`;
+          }
         }
       }
     });
@@ -992,6 +1054,12 @@ function renderHistoryList() {
       const newStatus = select.value;
       const previousStatus = (historySessions.find((d) => d.id === sessionId) || {}).status;
       select.className = `status-select status-${newStatus}`;
+      if (isMockSession) {
+        const local = historySessions.find((d) => d.id === sessionId);
+        if (local) local.status = newStatus;
+        showToast(t('demo_not_saved'), 'success');
+        return;
+      }
       try {
         await apiFetch(`/admin/sessions/${encodeURIComponent(sessionId)}/status`, {
           method: 'PUT',
@@ -1036,6 +1104,12 @@ async function loadHistory() {
     document.getElementById('history-export-btn').addEventListener('click', exportHistoryToCsv);
     document.getElementById('history-clear-btn').addEventListener('click', async () => {
       if (!confirm(t('history_clear_confirm'))) return;
+      if (isMockSession) {
+        historySessions = [];
+        renderHistoryList();
+        showToast(t('demo_not_saved'), 'success');
+        return;
+      }
       try {
         await apiFetch('/admin/messages', { method: 'DELETE' });
         historySessions = [];
