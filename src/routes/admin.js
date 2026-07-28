@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const Message   = require('../models/Message');
 const User      = require('../models/User');
 const { getSettings, saveSettings } = require('../models/Settings');
+const { STATUSES, setSessionStatus, getStatusesForSessions } = require('../models/Session');
 const { requireAdminKey } = require('../middleware/adminAuth');
 const { sendWebhookRequest } = require('../services/openaiService');
 
@@ -23,11 +24,12 @@ function clampInt(value, { min, max, fallback }) {
 // login form, no lockout of its own) — that makes it brute-forceable by
 // just hammering any admin endpoint with guesses. This limiter runs
 // BEFORE requireAdminKey so failed guesses count against the same budget
-// as real traffic: 30 requests/15 min per IP is plenty for a human using
-// the dashboard, but makes guessing a secret key impractical.
+// as real traffic: 120 requests/15 min per IP comfortably covers a human
+// working the dashboard (History tab included), but still makes guessing
+// a secret key impractical.
 const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 30,
+  limit: 120,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many admin requests. Please try again later.' },
@@ -84,11 +86,31 @@ router.get('/sessions', async (req, res) => {
     ]);
 
     const total = totalResult[0]?.total || 0;
+    const statusMap = await getStatusesForSessions(sessions.map((s) => s.sessionId));
+    const sessionsWithStatus = sessions.map((s) => ({ ...s, status: statusMap[s.sessionId] || 'new' }));
 
-    res.json({ success: true, data: sessions, total });
+    res.json({ success: true, data: sessionsWithStatus, total });
   } catch (err) {
     console.error('[admin] Failed to fetch sessions:', err.message);
     res.status(500).json({ success: false, message: 'Failed to fetch sessions' });
+  }
+});
+
+// PUT /api/admin/sessions/:sessionId/status — manual override, always wins
+// over the bot's auto-tagging from then on (see Session.js shouldApplyStatus).
+router.put('/sessions/:sessionId/status', async (req, res) => {
+  if (!isDbConnected()) return res.status(503).json({ success: false, message: 'Database is not connected' });
+  const { sessionId } = req.params;
+  const { status } = req.body || {};
+  if (!STATUSES.includes(status)) {
+    return res.status(400).json({ success: false, message: `status must be one of: ${STATUSES.join(', ')}` });
+  }
+  try {
+    const updated = await setSessionStatus(sessionId, status, 'manual');
+    res.json({ success: true, data: updated });
+  } catch (err) {
+    console.error('[admin] Failed to set session status:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to update status' });
   }
 });
 
@@ -239,14 +261,15 @@ router.get('/analytics', async (req, res) => {
       week.push(dayCounts.get(d.toISOString().slice(0, 10)) || 0);
     }
 
-    // "Конверсія в лід" — без окремої CRM/lead-схеми ми не знаємо, хто
-    // реально залишив контакт, тож використовуємо чесний proxy: частка
-    // сесій за 7 днів, що зайшли за межі одного привітання (4+ повідомлень
-    // = діалог, що розвинувся, а не одноразовий "привіт"). Не справжня
-    // конверсія — коли з'явиться реальний lead-статус, замінити на нього.
-    const qualified = sessionSizes.filter((s) => s.count >= 4).length;
-    const conversionRate = sessionSizes.length
-      ? Math.round((qualified / sessionSizes.length) * 1000) / 10
+    // "Конверсія в лід" — реальний lead-статус (Session.status), більше не
+    // проксі за кількістю повідомлень. Сесія рахується конвертованою, якщо
+    // її статус — 'qualified' або 'booked' (виставлений ботом автоматично
+    // або адміном вручну, див. src/models/Session.js).
+    const sessionIdsInWindow = sessionSizes.map((s) => s._id);
+    const statusMap = await getStatusesForSessions(sessionIdsInWindow);
+    const qualified = sessionIdsInWindow.filter((id) => ['qualified', 'booked'].includes(statusMap[id] || 'new')).length;
+    const conversionRate = sessionIdsInWindow.length
+      ? Math.round((qualified / sessionIdsInWindow.length) * 1000) / 10
       : 0;
 
     // Середній час відповіді бота: дельта між user-повідомленням і наступним
