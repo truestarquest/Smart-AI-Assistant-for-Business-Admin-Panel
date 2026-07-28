@@ -242,7 +242,10 @@
         <div class="panel">
           <div class="panel-head">
             <h3 data-i18n="nav_history">Історія діалогів</h3>
-            <button class="btn btn-primary small" id="history-export-btn" data-i18n="history_export">Експорт у CSV</button>
+            <div class="panel-actions">
+              <button class="btn-ghost small" id="history-clear-btn" data-i18n="history_clear">Очистити історію</button>
+              <button class="btn btn-primary small" id="history-export-btn" data-i18n="history_export">Експорт у CSV</button>
+            </div>
           </div>
           <div class="history-filters">
             <input type="text" id="history-search" data-i18n-placeholder="history_search_ph" placeholder="Пошук за сесією або повідомленням…">

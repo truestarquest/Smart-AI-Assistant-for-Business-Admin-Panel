@@ -103,6 +103,9 @@ const TRANSLATIONS = {
     analytics_chart_note: 'реальні дані з бази',
 
     history_export: 'Експорт у CSV',
+    history_clear: 'Очистити історію',
+    history_clear_confirm: 'Видалити ВСЮ історію діалогів та статуси лідів? Це незворотньо.',
+    history_clear_done: 'Історію очищено',
     history_search_ph: 'Пошук за сесією або повідомленням…',
     history_none: 'Нічого не знайдено за цим фільтром.',
     history_csv_done: 'CSV завантажено',
@@ -197,6 +200,9 @@ const TRANSLATIONS = {
     analytics_chart_note: 'real data from the database',
 
     history_export: 'Export CSV',
+    history_clear: 'Clear history',
+    history_clear_confirm: 'Delete ALL dialog history and lead statuses? This cannot be undone.',
+    history_clear_done: 'History cleared',
     history_search_ph: 'Search by session or message…',
     history_none: 'Nothing matches this filter.',
     history_csv_done: 'CSV downloaded',
@@ -1028,6 +1034,17 @@ async function loadHistory() {
     document.getElementById('history-status-filter').addEventListener('change', renderHistoryList);
     document.getElementById('history-date-filter').addEventListener('change', renderHistoryList);
     document.getElementById('history-export-btn').addEventListener('click', exportHistoryToCsv);
+    document.getElementById('history-clear-btn').addEventListener('click', async () => {
+      if (!confirm(t('history_clear_confirm'))) return;
+      try {
+        await apiFetch('/admin/messages', { method: 'DELETE' });
+        historySessions = [];
+        renderHistoryList();
+        showToast(t('history_clear_done'), 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    });
     historyInitialized = true;
   }
   try {
