@@ -1,115 +1,148 @@
-# Aegis AI — Smart AI Assistant for Business Admin Panel
+# 🛡️ Aegis AI — Smart AI Assistant for Business
 
-An AI-powered customer support assistant for small/medium businesses: an
-embeddable web chat widget, a Telegram bot, and an admin dashboard to manage
-both — knowledge base, tone of voice, working hours, lead tracking, and
-analytics, all backed by a real LLM.
+<p align="center">
+  <a href="https://smart-ai-assistant-for-business-admin.onrender.com">
+    <img src="https://img.shields.io/badge/Live_Demo-Render-informational?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo" />
+  </a>
+  <img src="https://img.shields.io/badge/Node.js-v20+-success?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js Version" />
+  <img src="https://img.shields.io/badge/Database-MongoDB-brightgreen?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/LLM-OpenAI--Compatible-blue?style=for-the-badge&logo=openai&logoColor=white" alt="LLM Integration" />
+</p>
 
-Live demo: [smart-ai-assistant-for-business-admin.onrender.com](https://smart-ai-assistant-for-business-admin.onrender.com)
+An intelligent, multi-channel customer support assistant tailored for small-to-medium businesses. **Aegis AI** features a zero-dependency embeddable web chat widget, a fully integrated Telegram bot, and an intuitive administrative dashboard—all backed by production-ready LLM routing.
 
-**Try the admin panel without any credentials** — open `/admin.html` and log
-in with `demo-admin-2024` (full read/write demo, changes aren't persisted)
-or `demo-manager-2024` (read-only). Both run entirely client-side against
-fixture data, no database or API key required — the fastest way to see the
-dashboard without asking for real access.
+🚀 **Live Demo:** [smart-ai-assistant-for-business-admin.onrender.com](https://smart-ai-assistant-for-business-admin.onrender.com)
 
-## Features
+---
 
-**Customer-facing**
-- Embeddable chat widget (`public/chat-widget.js`) — drop-in, no build step, bilingual (UA/EN)
-- Telegram bot, sharing the exact same conversation logic and history as the web widget
-- Replies in whichever language the visitor writes in, detected per message
-- Answers are grounded in an admin-editable knowledge base — the bot never invents prices or facts it wasn't given
-- Configurable working hours — outside them, visitors get an automatic off-hours reply instead of an LLM call
-- Basic prompt-injection resistance (regex pre-filter + a hardened system prompt)
+## 🔑 Instant Live Admin Preview
 
-**Admin panel** (`/admin.html`)
-- **Overview** — live stats: users, messages, active sessions
-- **Conversations** — browse any session's full message thread
-- **Users** — simple CRM-style user list (name/email)
-- **Analytics** — 7-day activity chart, real lead-conversion rate, average bot response time
-- **Dialog history** — every session with filters (search/status/date), manual lead-status override, CSV export, and a one-click "clear all history" reset
-- **Bot settings** — knowledge base, tone of voice (business/friendly/sales), working-hours schedule, and a CRM webhook (fires on every new lead, with a live test button)
-- Two-role demo mode (`demo-admin-2024` full access / `demo-manager-2024` read-only) for exploring the UI with zero backend setup
+Experience the full administrative dashboard **without needing a backend or database set up**:
 
-**Lead status tracking** — every session is auto-tagged `new` → `qualified` /
-`booked` / `lost` by the LLM itself (a hidden marker on its own reply, parsed
-server-side), or set manually by an admin — a manual override always locks
-out further auto-tagging for that session.
+* 🌐 **URL:** `/admin.html`
+* 🛠️ **Full Access Demo:** `demo-admin-2024` *(Read/Write demo; state is non-persistent)*
+* 👁️ **Read-Only Demo:** `demo-manager-2024` *(Manager view)*
 
-## Tech stack
+> Both demo accounts run entirely client-side using local fixture data—zero credentials or API keys required!
 
-- **Backend:** Node.js 20+, Express, MongoDB (Mongoose)
-- **AI:** OpenAI-compatible chat completion API (works with OpenAI directly, or any compatible endpoint — deployed against NVIDIA's `integrate.api.nvidia.com`)
-- **Messaging:** Telegraf (Telegram Bot API)
-- **Frontend:** vanilla HTML/CSS/JS, no framework, no build step
-- **Security:** helmet, cors, express-rate-limit (tiered per route), express-mongo-sanitize, `xss` sanitization on every stored message
-- **Deploy:** Render (`render.yaml` included)
+---
 
-## Architecture
+## 🔥 Key Features
+
+### 💬 Customer-Facing
+* **Drop-in Web Widget:** Vanilla `public/chat-widget.js` script—zero build steps, instant drop-in integration.
+* **Seamless Telegram Bot:** Runs off the exact same core engine, state management, and conversation history as the web chat.
+* **Auto-Language Detection:** Dynamically detects visitor language (bilingual UA/EN support natively) and responds in kind.
+* **Strict Knowledge Base Grounding:** Responds solely on admin-supplied facts and pricing—zero hallucination on crucial business data.
+* **Smart Business Hours:** Automatically dispatches off-hours automated replies outside operating hours to optimize API overhead.
+* **Hardened Security:** Built-in prompt-injection pre-filtering (Regex pre-checks + hardened system prompt).
+
+### 📊 Admin Panel (`/admin.html`)
+* **Live Overview:** Real-time metrics tracking active sessions, total users, and message volumes.
+* **Full Dialogue History:** Comprehensive session inspection with search, status filtering, date range views, CSV exports, and instant resets.
+* **Simple Lead CRM:** Auto-tagging lead lifecycle management (`new` ➔ `qualified` / `booked` / `lost`) powered by server-side parsing with permanent manual admin overrides.
+* **Custom Bot Configuration:** Real-time updates to knowledge bases, tone-of-voice presets (*Business*, *Friendly*, *Sales*), operating schedules, and live-tested CRM webhooks.
+* **Dual-Role Demo Mode:** Fast local UI showcase for potential clients or stakeholders.
+
+---
+
+## 🛠️ Tech Stack
+
+* **Core Runtime:** Node.js (v20+), Express.js
+* **Database:** MongoDB via Mongoose
+* **AI Orchestration:** OpenAI-compatible API *(supports OpenAI, local LLMs, or endpoints like NVIDIA's `integrate.api.nvidia.com`)*
+* **Messaging Integrations:** Telegraf (Telegram Bot API)
+* **Frontend:** Vanilla HTML5, CSS3, JavaScript (ES6+)
+* **Security Middleware:** Helmet, CORS, Express Rate Limit (route-tiered), Express Mongo Sanitize, `xss` sanitization
+* **Deployment:** Render (`render.yaml` included)
+
+---
+
+## 📐 Architecture
 
 ```
-Chat widget (public/)  ─┐
-                         ├─▶ Express API ─▶ OpenAI-compatible LLM
-Telegram bot (src/bot/)─┘        │
-                                  ▼
-                              MongoDB
-                    (messages, sessions/lead-status, settings)
-                                  ▲
-                                  │
-                    Admin panel (public/admin.html) ── x-admin-key auth
+                               ┌─────────────────────────┐
+    Chat Widget (public/) ────►│                         │
+                               │   Express.js API Server │─────► OpenAI-Compatible LLM
+   Telegram Bot (src/bot/)────►│                         │
+                               └───────────┬─────────────┘
+                                           │
+                                           ▼
+                                    MongoDB Database
+                         (Messages, Lead Status, Settings)
+                                           ▲
+                                           │
+    Admin Panel (public/admin.html) ───────┴────── (Auth via x-admin-key)
 ```
 
-Both the widget and the Telegram bot call the same `getChatReply()` service
-(`src/services/openaiService.js`) — one system prompt, one knowledge base,
-one place where language detection / off-hours / lead-tagging / webhook
-logic live, instead of duplicated per channel.
+> **Resilient Fallback Design:** If MongoDB is unreachable, Aegis AI gracefully degrades—allowing active chat interactions to function without persistent history, preventing service downtime.
 
-The app starts even if MongoDB isn't reachable — it degrades (chat still
-works without history/persistence) rather than crashing on boot.
+---
 
-## Getting started
+## 🚀 Quick Start
+
+### 1. Installation
 
 ```bash
+# Clone the repository and install dependencies
 npm install
-cp .env.example .env   # fill in your own values, see below
-npm run dev             # nodemon, auto-restart
-# or: npm start
+
+# Set up your environment variables
+cp .env.example .env
+
+# Run in development mode with auto-reload
+npm run dev
+
+# Or start in production mode
+npm start
 ```
 
-### Environment variables (`.env`)
+### 2. Environment Variables (`.env`)
 
-| Variable | Required | Notes |
-|---|---|---|
-| `PORT` | no | defaults to `3000` |
-| `MONGODB_URI` | recommended | app runs without it, but chat has no memory/persistence |
-| `OPENAI_API_KEY` | yes | any OpenAI-compatible provider's key |
-| `OPENAI_MODEL` | no | defaults to `gpt-4o-mini` |
-| `OPENAI_BASE_URL` | no | omit for real OpenAI; set for an OpenAI-compatible endpoint |
-| `TELEGRAM_BOT_TOKEN` | no | Telegram bot disabled if unset |
-| `ADMIN_KEY` | yes | secret for `/admin.html` — **change the default before deploying** |
-| `ALLOWED_ORIGIN` | yes in production | comma-separated list of allowed CORS origins |
-| `MAX_MESSAGE_LENGTH` | no | defaults to `1000` |
+| Variable | Mandatory? | Description |
+| :--- | :---: | :--- |
+| `PORT` | ❌ | Server port *(Defaults to `3000`)* |
+| `MONGODB_URI` | 🟡 Recommended | Database connection string. Chat works without persistence if omitted. |
+| `OPENAI_API_KEY` | ✅ | API key for your chosen OpenAI-compatible provider. |
+| `OPENAI_MODEL` | ❌ | Model identifier *(Defaults to `gpt-4o-mini`)*. |
+| `OPENAI_BASE_URL` | ❌ | Omit for official OpenAI API; set for alternative endpoints. |
+| `TELEGRAM_BOT_TOKEN` | ❌ | Bot token from `@BotFather`. Telegram bot is disabled if unset. |
+| `ADMIN_KEY` | ✅ | Master secret key required to authenticate `/admin.html`. |
+| `ALLOWED_ORIGIN` | 🟢 Prod Only | Comma-separated list of permitted CORS origins. |
+| `MAX_MESSAGE_LENGTH` | ❌ | Input character safety ceiling *(Defaults to `1000`)*. |
 
-## Project structure
+---
 
+## 📂 Project Structure
+
+```text
+├── server.js                     # Application entry point, middleware & route bootstrapping
+├── src/
+│   ├── bot/
+│   │   └── index.js              # Telegram bot handler & spam protection
+│   ├── middleware/
+│   │   └── adminAuth.js          # Authentication check via x-admin-key
+│   ├── models/                   # Mongoose Schemas (Message, User, Settings, Session)
+│   ├── routes/                   # API Endpoints (chat, admin, users)
+│   └── services/
+│       └── openaiService.js      # Unified LLM handling, language detection & webhooks
+└── public/
+    ├── index.html                # Product landing page
+    ├── chat-widget.{js,css}      # Embeddable zero-dependency chat widget
+    └── admin.html                # Modern Administrative Dashboard UI
 ```
-server.js                    entry point — middleware, routes, boot
-src/
-  bot/index.js                Telegram bot (anti-spam, shares chat logic)
-  routes/{chat,admin,users}.js
-  middleware/adminAuth.js      static x-admin-key check
-  models/{Message,User,Settings,Session}.js
-  services/openaiService.js    shared LLM call, language detection,
-                                lead-status tagging, webhooks, schedule
-public/
-  index.html, chat-widget.{js,css}   landing page + embeddable widget
-  admin.html, admin.{js,css}          admin dashboard
-```
 
-## Roadmap
+---
 
-Not built yet:
-- Per-channel breakdown (web widget vs. Telegram) on the analytics chart
-- Date-range picker for analytics (currently a fixed 7-day window)
-- CSV/export for the KPI cards, matching the Dialog history export
+## 🗺️ Roadmap
+
+- [ ] Multi-channel analytics breakdown (Web Widget vs. Telegram traffic comparison)
+- [ ] Custom date-range picker for historical analytics
+- [ ] Direct KPI card CSV / JSON data export
+
+---
+
+## 🔒 Security Highlights
+
+* **Static Admin Secret:** Access to `/admin.html` is secured via an `ADMIN_KEY` header. Ensure this is changed prior to deployment.
+* **Environment Protection:** `.env` files are ignored by default and kept strictly out of git history.
