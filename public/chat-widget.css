@@ -381,6 +381,8 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
 }
 .pricing-badge {
   position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+  z-index: 2; /* above .glass-panel::before's top-edge glow line (z-index:1), which
+                 otherwise cuts across this badge since it sits right at the card's top edge */
   background: linear-gradient(135deg, var(--glacier-mist), var(--aurora-cyan));
   color: var(--lagoon-deep); font-size: 12px; font-weight: 700;
   padding: 4px 16px; border-radius: 100px;
@@ -407,7 +409,17 @@ section { position: relative; z-index: 1; padding: 80px 5%; max-width: 1200px; m
   background: linear-gradient(135deg, var(--glacier-mist), var(--aurora-cyan));
   color: var(--lagoon-deep); border: none;
 }
-.pricing-cta--primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(69, 199, 194, 0.35); }
+.pricing-cta--primary:hover {
+  /* Re-assert the gradient background here: .pricing-cta:hover (above) and
+     .pricing-cta--primary:hover tie on specificity, and the base hover rule's
+     dark var(--glass-fill) was winning by source order, leaving this button's
+     dark text on a dark background instead of its bright gradient. */
+  background: linear-gradient(135deg, var(--glacier-mist), var(--aurora-cyan));
+  color: var(--lagoon-deep);
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(69, 199, 194, 0.35);
+}
 
 /* 1.25s per breath x 2 iterations = 2.5s total, symmetric ease so it
    feels like slow inhale/exhale rather than a hard on/off pulse. */
