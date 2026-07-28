@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const OpenAI   = require('openai');
 const Message  = require('../models/Message');
 const { getSettings } = require('../models/Settings');
+const { setSessionStatus } = require('../models/Session');
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL   = process.env.OPENAI_MODEL || 'gpt-4o-mini';
@@ -131,6 +132,21 @@ function fireWebhookAsync(url, payload) {
 
 /* ===== DYNAMIC SYSTEM PROMPT ===== */
 
+const STATUS_MARKER_RE = /\s*\[\[status:(qualified|booked|lost)\]\]\s*$/i;
+
+/**
+ * Strips the bot's hidden lead-status marker (if present) from the end of
+ * its reply. The marker is a server-side signal, never meant for the user
+ * to see — see the "СТАТУС ЛІДА" block in buildSystemPrompt().
+ * @param {string} text
+ * @returns {{text: string, status: string|null}}
+ */
+function stripStatusMarker(text) {
+  const match = text.match(STATUS_MARKER_RE);
+  if (!match) return { text, status: null };
+  return { text: text.replace(STATUS_MARKER_RE, '').trimEnd(), status: match[1].toLowerCase() };
+}
+
 /**
  * Генерує системний промпт динамічно для кожного запиту,
  * вбудовуючи ім'я користувача та поточний час.
@@ -173,7 +189,14 @@ ${toneLine}
 ФОРМАТУВАННЯ — КРИТИЧНО ВАЖЛИВО:
 Використовуй ТІЛЬКИ базові HTML-теги: <b>, <i>, <code>, <pre>.
 НІКОЛИ не використовуй Markdown: без зірочок **, без підкреслень __, без хештегів #.
-Якщо наводиш код — обов'язково загортай у <pre><code>...</code></pre>.`;
+Якщо наводиш код — обов'язково загортай у <pre><code>...</code></pre>.
+
+СТАТУС ЛІДА — СЛУЖБОВА ПОЗНАЧКА, ПІСЛЯ ЗВИЧАЙНОЇ ВІДПОВІДІ:
+Якщо з цього повідомлення користувача ЧІТКО видно результат розмови, додай в самому кінці своєї відповіді, окремим рядком, ОДНУ службову мітку:
+- [[status:booked]] — користувач явно погодився записатись/оформити замовлення/купити.
+- [[status:qualified]] — користувач явно зацікавлений і уточнює деталі щодо покупки чи тарифів.
+- [[status:lost]] — користувач явно відмовився або сказав, що це йому не підходить.
+В усіх інших випадках НЕ додавай жодної мітки. Ця мітка не показується користувачу — це внутрішній сигнал для CRM, тому вона має бути єдиним, що йде після звичайного тексту відповіді, без жодних інших символів після неї.`;
 }
 
 /* ===== MESSAGE PERSISTENCE ===== */
@@ -275,8 +298,16 @@ async function getChatReply(userMessage, firstName, sessionId) {
     temperature: 0.72,
   });
 
-  const reply = completion.choices?.[0]?.message?.content?.trim();
-  if (!reply) throw new Error('Empty response from LLM');
+  const rawReply = completion.choices?.[0]?.message?.content?.trim();
+  if (!rawReply) throw new Error('Empty response from LLM');
+
+  const { text: reply, status } = stripStatusMarker(rawReply);
+
+  if (status && sessionId) {
+    setSessionStatus(sessionId, status, 'auto').catch((err) => {
+      console.error('[Session] Auto status update failed:', err.message);
+    });
+  }
 
   return reply;
 }
@@ -289,4 +320,5 @@ module.exports = {
   getChatReply,
   isBotOpenNow,
   sendWebhookRequest,
+  stripStatusMarker,
 };
