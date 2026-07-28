@@ -52,7 +52,7 @@ const TRANSLATIONS = {
     page_sub_overview: 'Стан асистента у реальному часі',
     page_sub_conversations: 'Історія листування з користувачами',
     page_sub_users: 'Керування обліковими записами',
-    page_sub_analytics: 'KPI та активність за 7 днів',
+    page_sub_analytics: 'KPI, активність і канали за вибраний період',
     page_sub_history: 'Фільтри, пошук, експорт CSV',
     history_status_updated: 'Статус оновлено',
     page_sub_settings: 'База знань, тон, розклад і webhook — усі реальні',
@@ -91,16 +91,28 @@ const TRANSLATIONS = {
     field_name: "Ім'я",
     field_email: 'Email',
 
-    kpi_dialogs_today: 'Діалогів сьогодні',
-    kpi_dialogs_today_foot: 'за сьогодні',
+    kpi_dialogs_range: 'Діалогів за період',
+    kpi_dialogs_range_foot: 'за вибраний період',
     kpi_conversion: 'Конверсія в лід',
     kpi_conversion_foot: 'діалог → залишений контакт',
     kpi_response_time: 'Сер. час відповіді',
     kpi_response_time_foot: 'користувач → бот',
     kpi_active_bots: 'Активні боти',
     kpi_active_bots_foot: 'підключено до Telegram',
-    analytics_chart_title: 'Активність за 7 днів',
+    analytics_chart_title: 'Активність за період',
     analytics_chart_note: 'реальні дані з бази',
+    analytics_channels: 'Канали трафіку',
+    analytics_channels_note: 'за вибраний період',
+    channel_web: 'Веб-віджет',
+    channel_telegram: 'Telegram',
+    channel_summary: (sessions, messages) => `${sessions} діалогів · ${messages} повідомлень`,
+    analytics_export_csv: 'KPI → CSV',
+    analytics_export_json: 'KPI → JSON',
+    export_done: 'Файл завантажено',
+    csv_metric: 'Показник',
+    csv_value: 'Значення',
+    csv_sessions: 'діалоги',
+    csv_messages: 'повідомлення',
 
     history_export: 'Експорт у CSV',
     history_clear: 'Очистити історію',
@@ -151,7 +163,7 @@ const TRANSLATIONS = {
     page_sub_overview: 'Assistant status in real time',
     page_sub_conversations: 'Message history with users',
     page_sub_users: 'Manage accounts',
-    page_sub_analytics: '7-day KPIs and activity',
+    page_sub_analytics: 'KPIs, activity and channels for the selected period',
     page_sub_history: 'Filters, search, CSV export',
     history_status_updated: 'Status updated',
     page_sub_settings: 'Knowledge base, tone, schedule & webhook are all real',
@@ -190,16 +202,28 @@ const TRANSLATIONS = {
     field_name: 'Name',
     field_email: 'Email',
 
-    kpi_dialogs_today: 'Dialogs today',
-    kpi_dialogs_today_foot: 'today',
+    kpi_dialogs_range: 'Dialogs in period',
+    kpi_dialogs_range_foot: 'in the selected period',
     kpi_conversion: 'Lead conversion',
     kpi_conversion_foot: 'dialog → contact left',
     kpi_response_time: 'Avg. response time',
     kpi_response_time_foot: 'user → bot',
     kpi_active_bots: 'Active bots',
     kpi_active_bots_foot: 'connected to Telegram',
-    analytics_chart_title: '7-day activity',
+    analytics_chart_title: 'Activity over period',
     analytics_chart_note: 'real data from the database',
+    analytics_channels: 'Traffic channels',
+    analytics_channels_note: 'in the selected period',
+    channel_web: 'Web widget',
+    channel_telegram: 'Telegram',
+    channel_summary: (sessions, messages) => `${sessions} dialogs · ${messages} messages`,
+    analytics_export_csv: 'KPI → CSV',
+    analytics_export_json: 'KPI → JSON',
+    export_done: 'File downloaded',
+    csv_metric: 'Metric',
+    csv_value: 'Value',
+    csv_sessions: 'dialogs',
+    csv_messages: 'messages',
 
     history_export: 'Export CSV',
     history_clear: 'Clear history',
@@ -857,9 +881,21 @@ function renderUserText(value) {
 /* ============================================================
    ANALYTICS — real data from /api/admin/analytics (see routes/admin.js)
    ============================================================ */
-const DAY_KEYS = ['day_sun', 'day_mon', 'day_tue', 'day_wed', 'day_thu', 'day_fri', 'day_sat'];
+let analyticsInitialized = false;
+let analyticsData = null; // last payload, reused by the CSV/JSON export buttons
 
-function renderSparkline(container, values) {
+/** 'YYYY-MM-DD' → 'DD.MM' for the chart's x-axis labels. */
+function shortDayLabel(isoDay) {
+  const [, m, d] = isoDay.split('-');
+  return `${d}.${m}`;
+}
+
+function renderSparkline(container, series) {
+  if (!series.length) {
+    container.innerHTML = `<div class="sparkline-empty">${t('analytics_no_activity')}</div>`;
+    return;
+  }
+  const values = series.map((p) => p.count);
   const w = 640, h = 160, pad = 10;
   // All-zero week is a real, common state (fresh deploy, quiet period) —
   // scaling by min/max would still be flat in that case (min=max=0), but
@@ -868,7 +904,9 @@ function renderSparkline(container, values) {
   const hasActivity = values.some((v) => v > 0);
   const max = Math.max(...values), min = Math.min(...values);
   const span = Math.max(max - min, 1);
-  const stepX = (w - pad * 2) / (values.length - 1);
+  // A single-day range is a legal selection — avoid dividing by zero and
+  // just pin its one point to the left edge.
+  const stepX = values.length > 1 ? (w - pad * 2) / (values.length - 1) : 0;
   const points = values.map((v, i) => {
     const x = pad + i * stepX;
     const y = hasActivity ? h - pad - ((v - min) / span) * (h - pad * 2) : h / 2;
@@ -876,8 +914,12 @@ function renderSparkline(container, values) {
   });
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
   const areaPath = `${linePath} L${points[points.length - 1][0].toFixed(1)},${h - pad} L${points[0][0].toFixed(1)},${h - pad} Z`;
-  const todayIdx = new Date().getDay();
-  const labels = Array.from({ length: 7 }, (_, i) => t(DAY_KEYS[(todayIdx - 6 + i + 70) % 7]));
+  // One <span> per point keeps the labels aligned with the plotted days;
+  // on a long range most of them are blank so the axis stays readable.
+  const labelStep = Math.ceil(series.length / 7);
+  const labels = series.map((p, i) =>
+    (i % labelStep === 0 || i === series.length - 1) ? shortDayLabel(p.date) : ''
+  );
   const emptyNote = hasActivity ? '' : `<div class="sparkline-empty">${t('analytics_no_activity')}</div>`;
 
   container.innerHTML = `
@@ -897,15 +939,107 @@ function renderSparkline(container, values) {
   `;
 }
 
+/** Web-widget vs Telegram split — the server derives the channel from the
+ *  sessionId prefix (see src/services/analytics.js channelOf). */
+function renderChannels(container, channels) {
+  const rows = [
+    { key: 'web', ...(channels?.web || { sessions: 0, messages: 0 }) },
+    { key: 'telegram', ...(channels?.telegram || { sessions: 0, messages: 0 }) },
+  ];
+  const totalSessions = rows.reduce((sum, r) => sum + r.sessions, 0);
+  container.innerHTML = rows.map((r) => {
+    const share = totalSessions ? Math.round((r.sessions / totalSessions) * 100) : 0;
+    return `
+      <div class="channel-row" data-channel="${r.key}">
+        <div class="channel-row-head">
+          <span>${t(`channel_${r.key}`)} · ${share}%</span>
+          <span class="muted">${t('channel_summary', r.sessions, r.messages)}</span>
+        </div>
+        <div class="channel-bar"><span style="width:${share}%"></span></div>
+      </div>
+    `;
+  }).join('');
+}
+
+/** Both export buttons and the history CSV share this — one Blob download. */
+function downloadFile(filename, mime, content) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function toCsv(rows) {
+  // Leading BOM so Excel opens the Cyrillic headers as UTF-8, not cp1251.
+  return `﻿${rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')}`;
+}
+
+/** Flat metric/value table of exactly what the analytics tab is showing. */
+function analyticsCsvRows(data) {
+  return [
+    [t('csv_metric'), t('csv_value')],
+    [t('kpi_dialogs_range'), data.dialogs ?? 0],
+    [t('kpi_conversion'), `${data.conversionRate ?? 0}%`],
+    [t('kpi_response_time'), data.avgResponseSeconds ?? 0],
+    [t('kpi_active_bots'), data.activeBots ?? 0],
+    [`${t('channel_web')} — ${t('csv_sessions')}`, data.channels?.web?.sessions ?? 0],
+    [`${t('channel_web')} — ${t('csv_messages')}`, data.channels?.web?.messages ?? 0],
+    [`${t('channel_telegram')} — ${t('csv_sessions')}`, data.channels?.telegram?.sessions ?? 0],
+    [`${t('channel_telegram')} — ${t('csv_messages')}`, data.channels?.telegram?.messages ?? 0],
+    ...(data.days || []).map((d) => [d.date, d.count]),
+  ];
+}
+
+function exportAnalytics(format) {
+  if (!analyticsData) return;
+  const stamp = `${analyticsData.range?.from || ''}_${analyticsData.range?.to || ''}`;
+  if (format === 'json') {
+    downloadFile(`aegis-kpi-${stamp}.json`, 'application/json', JSON.stringify(analyticsData, null, 2));
+  } else {
+    downloadFile(`aegis-kpi-${stamp}.csv`, 'text/csv;charset=utf-8;', toCsv(analyticsCsvRows(analyticsData)));
+  }
+  showToast(t('export_done'), 'success');
+}
+
 async function loadAnalytics() {
+  const fromInput = document.getElementById('analytics-from');
+  const toInput = document.getElementById('analytics-to');
+
+  if (!analyticsInitialized) {
+    // Native date inputs, no picker library — changing either just refetches.
+    [fromInput, toInput].forEach((el) => el.addEventListener('change', loadAnalytics));
+    document.getElementById('analytics-csv-btn').addEventListener('click', () => exportAnalytics('csv'));
+    document.getElementById('analytics-json-btn').addEventListener('click', () => exportAnalytics('json'));
+    analyticsInitialized = true;
+  }
+
+  const params = new URLSearchParams();
+  if (fromInput.value) params.set('from', fromInput.value);
+  if (toInput.value) params.set('to', toInput.value);
+  const query = params.toString();
+
   try {
-    const json = await apiFetch('/admin/analytics');
+    const json = await apiFetch(`/admin/analytics${query ? `?${query}` : ''}`);
     const data = unwrapObject(json);
-    document.getElementById('kpi-dialogs-today').textContent = data.dialogsToday ?? 0;
+    analyticsData = data;
+
+    // The server is the authority on the window it actually used (it clamps
+    // over-long ranges and swaps reversed ones) — mirror that back into the
+    // inputs so the UI can't claim a range the numbers don't cover.
+    if (data.range) {
+      fromInput.value = data.range.from;
+      toInput.value = data.range.to;
+    }
+
+    document.getElementById('kpi-dialogs-today').textContent = data.dialogs ?? 0;
     document.getElementById('kpi-conversion').textContent = `${data.conversionRate ?? 0}%`;
-    document.getElementById('kpi-response-time').textContent = `${data.avgResponseSeconds ?? 0}с`.replace('с', currentLang === 'en' ? 's' : 'с');
+    document.getElementById('kpi-response-time').textContent = `${data.avgResponseSeconds ?? 0}${currentLang === 'en' ? 's' : 'с'}`;
     document.getElementById('kpi-active-bots').textContent = data.activeBots ?? 0;
-    renderSparkline(document.getElementById('activity-chart'), data.week?.length ? data.week : [0, 0, 0, 0, 0, 0, 0]);
+    renderSparkline(document.getElementById('activity-chart'), data.days || []);
+    renderChannels(document.getElementById('channel-breakdown'), data.channels);
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -1085,16 +1219,11 @@ function exportHistoryToCsv() {
     ? ['Session', 'Last message', 'Status', 'Date']
     : ['Сесія', 'Останнє повідомлення', 'Статус', 'Дата'];
   const rows = dialogs.map((d) => [d.id, d.preview, statusLabel(d.status), formatTime(d.date)]);
-  const csv = [header, ...rows]
-    .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-    .join('\n');
-  const blob = new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `dialogs-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadFile(
+    `dialogs-${new Date().toISOString().slice(0, 10)}.csv`,
+    'text/csv;charset=utf-8;',
+    toCsv([header, ...rows])
+  );
   showToast(t('history_csv_done'), 'success');
 }
 

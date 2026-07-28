@@ -207,9 +207,9 @@
       <section id="view-analytics" class="view">
         <div class="stat-grid">
           <div class="stat-card" data-glow="cyan">
-            <span class="stat-label" data-i18n="kpi_dialogs_today">Діалогів сьогодні</span>
+            <span class="stat-label" data-i18n="kpi_dialogs_range">Діалогів за період</span>
             <span class="stat-value" id="kpi-dialogs-today">—</span>
-            <span class="stat-foot" data-i18n="kpi_dialogs_today_foot">за сьогодні</span>
+            <span class="stat-foot" data-i18n="kpi_dialogs_range_foot">за вибраний період</span>
           </div>
           <div class="stat-card" data-glow="violet">
             <span class="stat-label" data-i18n="kpi_conversion">Конверсія в лід</span>
@@ -230,10 +230,32 @@
 
         <div class="panel">
           <div class="panel-head">
-            <h3 data-i18n="analytics_chart_title">Активність за 7 днів</h3>
+            <h3 data-i18n="analytics_chart_title">Активність за період</h3>
+            <div class="panel-actions">
+              <button class="btn-ghost small" id="analytics-csv-btn" data-i18n="analytics_export_csv">KPI → CSV</button>
+              <button class="btn-ghost small" id="analytics-json-btn" data-i18n="analytics_export_json">KPI → JSON</button>
+            </div>
+          </div>
+          <div class="analytics-filters">
+            <label class="range-field">
+              <span data-i18n="schedule_from">З</span>
+              <input type="date" id="analytics-from">
+            </label>
+            <label class="range-field">
+              <span data-i18n="schedule_to">До</span>
+              <input type="date" id="analytics-to">
+            </label>
             <span class="muted" id="analytics-chart-note" data-i18n="analytics_chart_note">реальні дані з бази</span>
           </div>
           <div class="chart-wrap" id="activity-chart"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3 data-i18n="analytics_channels">Канали трафіку</h3>
+            <span class="muted" data-i18n="analytics_channels_note">за вибраний період</span>
+          </div>
+          <div class="channel-list" id="channel-breakdown"></div>
         </div>
       </section>
 
