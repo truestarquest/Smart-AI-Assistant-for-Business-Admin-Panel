@@ -81,10 +81,22 @@ async function getStatusesForSessions(sessionIds) {
   }
 }
 
+/**
+ * Wipes every lead-status doc — paired with clearing Message history so a
+ * "clear history" reset doesn't leave stale statuses pointing at sessions
+ * that no longer have any messages.
+ * @returns {Promise<{deletedCount: number}>}
+ */
+async function deleteAllStatuses() {
+  if (mongoose.connection.readyState !== 1) return { deletedCount: 0 };
+  return SessionModel.deleteMany({});
+}
+
 module.exports = {
   STATUSES,
   shouldApplyStatus,
   getSessionStatus,
   setSessionStatus,
   getStatusesForSessions,
+  deleteAllStatuses,
 };
