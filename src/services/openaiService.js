@@ -147,13 +147,31 @@ function stripStatusMarker(text) {
   return { text: text.replace(STATUS_MARKER_RE, '').trimEnd(), status: match[1].toLowerCase() };
 }
 
+// Small/cheap LLMs (this app calls a gpt-4o-mini-class model) don't reliably
+// follow a prose "detect and match the user's language" rule once a
+// conversation's history leans one way — they default back to the dominant
+// language instead of the latest message. Detecting the language in code
+// and issuing a blunt, per-turn directive removes that judgment call from
+// the model entirely: it's told which language to use, not asked to infer it.
+// Cyrillic-vs-Latin letter ratio is crude but sufficient for uk/en, the only
+// two languages this bot needs to distinguish.
+function detectMessageLanguage(text) {
+  if (!text) return null;
+  const cyrillic = (text.match(/[а-яіїєґА-ЯІЇЄҐ]/g) || []).length;
+  const latin = (text.match(/[a-zA-Z]/g) || []).length;
+  if (cyrillic === 0 && latin === 0) return null; // no letters to judge by (emoji/numbers/etc.)
+  return latin > cyrillic ? 'en' : 'uk';
+}
+
 /**
  * Генерує системний промпт динамічно для кожного запиту,
  * вбудовуючи ім'я користувача та поточний час.
  * @param {string} firstName
+ * @param {object} [settings]
+ * @param {'uk'|'en'|null} [replyLang] - визначена мова останнього повідомлення користувача (detectMessageLanguage)
  * @returns {string}
  */
-function buildSystemPrompt(firstName, settings = {}) {
+function buildSystemPrompt(firstName, settings = {}, replyLang = null) {
   const userName    = getValidUserName(firstName);
   const currentTime = getCurrentTime();
   const { knowledgeBase, tone } = settings;
@@ -164,10 +182,16 @@ function buildSystemPrompt(firstName, settings = {}) {
 
   const toneLine = TONE_INSTRUCTIONS[tone] || TONE_INSTRUCTIONS.business;
 
-  return `Ти — Aegis, дружній AI-асистент магазину електроніки.
+  // Not a suggestion — a hard, unconditional directive placed first, above
+  // even the persona description, so it can't get diluted by everything
+  // that follows.
+  const languageDirective = replyLang === 'en'
+    ? 'ОБОВ\'ЯЗКОВА ІНСТРУКЦІЯ — ВАЖЛИВІША ЗА ВСЕ, ЩО НИЖЧЕ: Останнє повідомлення користувача написане АНГЛІЙСЬКОЮ. Твоя відповідь МАЄ бути ПОВНІСТЮ АНГЛІЙСЬКОЮ мовою, від першого до останнього слова. Жодного українського слова в цій відповіді.'
+    : 'ОБОВ\'ЯЗКОВА ІНСТРУКЦІЯ — ВАЖЛИВІША ЗА ВСЕ, ЩО НИЖЧЕ: Відповідай українською мовою.';
 
-МОВА ВІДПОВІДІ — ПЕРЕВІРЯЙ ЦЕ ПЕРШИМ, ПЕРЕД КОЖНОЮ ВІДПОВІДДЮ:
-Визначай мову ОСТАННЬОГО повідомлення користувача нижче в історії розмови — не мову попередніх реплік, не мову цієї інструкції. Відповідай ТІЄЮ Ж мовою, якою написане останнє повідомлення, навіть якщо вся розмова до цього велась іншою мовою (наприклад, користувач писав українською, а потім перейшов на англійську — з цього моменту відповідай англійською, доки він знову не зміниться). Якщо мову не вдається впевнено визначити — використовуй українську.
+  return `${languageDirective}
+
+Ти — Aegis, дружній AI-асистент магазину електроніки.
 ${knowledgeBlock}
 АНТИ-ГАЛЮЦИНАЦІЇ — ВАЖЛИВО:
 - Конкретні ціни, характеристики товарів, посилання та терміни бери ТІЛЬКИ з блоку "БАЗА ЗНАНЬ" вище. Якщо там немає потрібних даних — чесно скажи, що уточниш це і запропонуй звернутися до менеджера. НІКОЛИ не вигадуй цифри чи посилання.
@@ -289,7 +313,7 @@ async function getChatReply(userMessage, firstName, sessionId) {
     return OFF_HOURS_REPLY;
   }
 
-  const systemPrompt = buildSystemPrompt(firstName, settings);
+  const systemPrompt = buildSystemPrompt(firstName, settings, detectMessageLanguage(userMessage));
   const conversation = history.length ? history : [{ role: 'user', content: userMessage }];
 
   const completion = await openai.chat.completions.create({
@@ -325,4 +349,5 @@ module.exports = {
   isBotOpenNow,
   sendWebhookRequest,
   stripStatusMarker,
+  detectMessageLanguage,
 };
