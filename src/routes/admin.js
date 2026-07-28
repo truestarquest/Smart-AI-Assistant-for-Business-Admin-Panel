@@ -9,6 +9,7 @@ const { getSettings, saveSettings } = require('../models/Settings');
 const { STATUSES, setSessionStatus, getStatusesForSessions, deleteAllStatuses } = require('../models/Session');
 const { requireAdminKey } = require('../middleware/adminAuth');
 const { sendWebhookRequest } = require('../services/openaiService');
+const { parseDateRange, buildDaySeries, splitByChannel } = require('../services/analytics');
 
 const router = express.Router();
 
@@ -240,43 +241,42 @@ router.post('/settings/webhook-test', async (req, res) => {
   }
 });
 
-// GET /api/admin/analytics — KPI-картки + активність за 7 днів для вкладки "Аналітика"
+// GET /api/admin/analytics?from=YYYY-MM-DD&to=YYYY-MM-DD — KPI-картки,
+// активність по днях і розподіл по каналах за вибраний період.
+// Без from/to — трейлінгові 7 днів (див. parseDateRange).
 router.get('/analytics', async (req, res) => {
   if (!isDbConnected()) return res.status(503).json({ success: false, message: 'Database is not connected' });
   try {
     // UTC throughout — $dateToString below buckets in UTC by default, and
     // the server's local TZ (e.g. Europe/Kyiv, UTC+3) would otherwise shift
-    // every day's bucket by one relative to the JS-side "today" cutoff,
+    // every day's bucket by one relative to the range boundaries,
     // silently misattributing a session to the wrong day of the chart.
-    const startOfToday = new Date();
-    startOfToday.setUTCHours(0, 0, 0, 0);
-    const sevenDaysAgo = new Date(startOfToday);
-    sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 6); // 7-day window incl. today
+    const range = parseDateRange(req.query.from, req.query.to);
+    const window = { createdAt: { $gte: range.start, $lt: range.endExclusive } };
 
-    const [dialogsTodaySessions, dayGroups, sessionSizes, recentMessages] = await Promise.all([
-      Message.distinct('sessionId', { createdAt: { $gte: startOfToday } }),
+    const [dayGroups, sessionSizes, recentMessages] = await Promise.all([
       Message.aggregate([
-        { $match: { createdAt: { $gte: sevenDaysAgo } } },
+        { $match: window },
         { $group: { _id: { day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, sessionId: '$sessionId' } } },
         { $group: { _id: '$_id.day', count: { $sum: 1 } } },
       ]),
       Message.aggregate([
-        { $match: { createdAt: { $gte: sevenDaysAgo } } },
+        { $match: window },
         { $group: { _id: '$sessionId', count: { $sum: 1 } } },
       ]),
-      Message.find({ createdAt: { $gte: sevenDaysAgo } })
+      // ponytail: hard cap instead of streaming/aggregating the deltas in
+      // Mongo — a 90-day window on a busy deployment would otherwise pull
+      // the whole collection into memory just to average response times.
+      // Move the delta maths into an aggregation pipeline if this cap
+      // starts truncating real data.
+      Message.find(window)
         .sort({ sessionId: 1, createdAt: 1 })
         .select('role sessionId createdAt')
+        .limit(20000)
         .lean(),
     ]);
 
-    const dayCounts = new Map(dayGroups.map((g) => [g._id, g.count]));
-    const week = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(startOfToday);
-      d.setUTCDate(d.getUTCDate() - i);
-      week.push(dayCounts.get(d.toISOString().slice(0, 10)) || 0);
-    }
+    const days = buildDaySeries(dayGroups, range);
 
     // "Конверсія в лід" — реальний lead-статус (Session.status), більше не
     // проксі за кількістю повідомлень. Сесія рахується конвертованою, якщо
@@ -314,11 +314,13 @@ router.get('/analytics', async (req, res) => {
     res.json({
       success: true,
       data: {
-        dialogsToday: dialogsTodaySessions.length,
+        range: { from: range.from, to: range.to, days: range.days },
+        dialogs: sessionIdsInWindow.length,
         conversionRate,
         avgResponseSeconds,
         activeBots: 1, // одна Telegram-бот-інстанція — множинні боти не підтримуються
-        week,
+        days,
+        channels: splitByChannel(sessionSizes),
       },
     });
   } catch (err) {
