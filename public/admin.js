@@ -118,6 +118,7 @@ const TRANSLATIONS = {
     settings_tone: 'Тон спілкування',
     tone_business: 'Діловий', tone_friendly: 'Дружній', tone_sales: 'Продажний',
     settings_schedule: 'Розклад роботи бота',
+    schedule_enabled: 'Обмежити бота робочим часом (вимкнено = бот відповідає цілодобово)',
     schedule_from: 'З', schedule_to: 'До',
     schedule_hint: 'Вихідні дні — вимкнені кнопки вище.',
     day_mon: 'Пн', day_tue: 'Вт', day_wed: 'Ср', day_thu: 'Чт', day_fri: 'Пт', day_sat: 'Сб', day_sun: 'Нд',
@@ -216,6 +217,7 @@ const TRANSLATIONS = {
     settings_tone: 'Tone of voice',
     tone_business: 'Business', tone_friendly: 'Friendly', tone_sales: 'Sales',
     settings_schedule: "Bot's working hours",
+    schedule_enabled: 'Restrict the bot to working hours (off = bot replies 24/7)',
     schedule_from: 'From', schedule_to: 'To',
     schedule_hint: 'Days off — buttons above are disabled.',
     day_mon: 'Mo', day_tue: 'Tu', day_wed: 'We', day_thu: 'Th', day_fri: 'Fr', day_sat: 'Sa', day_sun: 'Su',
@@ -1149,6 +1151,7 @@ async function loadSettings() {
     const remote = unwrapObject(json);
     document.getElementById('settings-kb').value = remote.knowledgeBase || '';
     document.getElementById('settings-tone').value = remote.tone || 'business';
+    document.getElementById('settings-schedule-enabled').checked = remote.schedule?.enabled ?? false;
     document.getElementById('settings-hours-from').value = remote.schedule?.from || '09:00';
     document.getElementById('settings-hours-to').value = remote.schedule?.to || '18:00';
     document.getElementById('settings-webhook').value = remote.webhookUrl || '';
@@ -1181,7 +1184,7 @@ async function loadSettings() {
             knowledgeBase: document.getElementById('settings-kb').value,
             tone: document.getElementById('settings-tone').value,
             schedule: {
-              enabled: true,
+              enabled: document.getElementById('settings-schedule-enabled').checked,
               from: document.getElementById('settings-hours-from').value || '09:00',
               to: document.getElementById('settings-hours-to').value || '18:00',
               weekdays,

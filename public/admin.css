@@ -667,6 +667,8 @@ input::placeholder { color: var(--text-faint); }
 .panel-body select,
 .panel-body input[type="text"],
 .panel-body input[type="time"] { width: 100%; }
+.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-dim); margin-bottom: 14px; cursor: pointer; }
+.checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--cyan); cursor: pointer; }
 .field-row { display: flex; gap: 14px; flex-wrap: wrap; }
 .field-row label { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: var(--text-dim); flex: 1; min-width: 120px; }
 .weekday-picker { display: flex; gap: 6px; flex-wrap: wrap; }
