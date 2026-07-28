@@ -6,7 +6,7 @@ const rateLimit = require('express-rate-limit');
 const Message   = require('../models/Message');
 const User      = require('../models/User');
 const { getSettings, saveSettings } = require('../models/Settings');
-const { STATUSES, setSessionStatus, getStatusesForSessions } = require('../models/Session');
+const { STATUSES, setSessionStatus, getStatusesForSessions, deleteAllStatuses } = require('../models/Session');
 const { requireAdminKey } = require('../middleware/adminAuth');
 const { sendWebhookRequest } = require('../services/openaiService');
 
@@ -60,6 +60,23 @@ router.get('/messages', async (req, res) => {
   } catch (err) {
     console.error('[admin] Failed to fetch messages:', err.message);
     res.status(500).json({ success: false, message: 'Failed to fetch messages' });
+  }
+});
+
+// DELETE /api/admin/messages — wipes ALL chat history + lead-status docs.
+// Destructive, no undo, no filter (clears everything, not a single session)
+// — the admin UI confirms before calling this.
+router.delete('/messages', async (req, res) => {
+  if (!isDbConnected()) return res.status(503).json({ success: false, message: 'Database is not connected' });
+  try {
+    const [messagesResult] = await Promise.all([
+      Message.deleteMany({}),
+      deleteAllStatuses(),
+    ]);
+    res.json({ success: true, deletedCount: messagesResult.deletedCount });
+  } catch (err) {
+    console.error('[admin] Failed to clear history:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to clear history' });
   }
 });
 
