@@ -93,8 +93,8 @@ const translations = {
     feature1_desc: "Інтелектуальний підбір слотів. Aegis аналізує ваш розклад, пропонує клієнту зручний час та автоматично фіксує запис без участі менеджера.",
     feature2_title: "Кваліфікація лідів",
     feature2_desc: "Жодних \"мертвих\" діалогів. Бот майстерно та природно вплітає запитання в розмову, отримуючи ім'я, телефон/Telegram та суть задачі клієнта.",
-    feature3_title: "Безпечна синхронізація",
-    feature3_desc: "One-Time Deep Links. Інноваційна технологія одноразових токенів для безшовного та захищеного перенесення розмови з вебсайту прямо в Telegram клієнта.",
+    feature3_title: "Гнучке налаштування",
+    feature3_desc: "Розклад роботи бота та тон спілкування налаштовуються прямо в адмін-панелі — Aegis відповідає у ваш робочий час і говорить так, як звучить ваш бренд.",
     feature4_title: "Миттєвий сервіс",
     feature4_desc: "Нуль очікувань. Блискавична реакція за 0.5 секунди в будь-який час доби. Ваші клієнти завжди отримують увагу першими.",
 
@@ -116,7 +116,7 @@ const translations = {
     price_starter_f4: "Email сповіщення про лідів",
     price_pro_f1: "Сайт + інтеграція з Telegram-ботом",
     price_pro_f2: "Необмежені діалоги",
-    price_pro_f3: "Авто-синхронізація (One-Time Deep Links)",
+    price_pro_f3: "Розклад роботи бота та кастомний тон спілкування",
     price_pro_f4: "Пряма CRM-інтеграція та Webhooks",
     price_ent_f1: "Виділений сервер (Dedicated Instance)",
     price_ent_f2: "Індивідуальні складні сценарії",
@@ -133,7 +133,7 @@ const translations = {
     testi_1_text: "\"Aegis повністю закрив нам питання з нічними клієнтами. 30% запитів прилітає після опівночі. Бот сам кваліфікує ліда, бере номер і записує в CRM. Зранку менеджери просто дзвонять гарячим клієнтам.\"",
     testi_1_author: "— Олександр, Власник AutoParts UA",
     testi_1_badge: "Приклад кейсу · +30% лідів уночі",
-    testi_2_text: "\"Інтеграція справді зайняла 2 хвилини. Найбільше вразило те, як бот переводить клієнта в Telegram (One-Time Links) — жодних втрат контактів, навіть якщо людина закрила вкладку браузера.\"",
+    testi_2_text: "\"Інтеграція справді зайняла 2 хвилини. Найбільше вразило те, як бот сам передає нових лідів у нашу CRM через webhook — жодної ручної роботи.\"",
     testi_2_author: "— Марина, СЕО BeautyHub",
     testi_2_badge: "Приклад кейсу · 2 хв на інтеграцію",
     testi_3_text: "\"Раніше пропускали дзвінки після 19:00 — тепер Aegis сам відповідає, записує на прийом і одразу підтверджує час. Адміністратору лишається тільки нагадати клієнту вранці.\"",
@@ -154,7 +154,12 @@ const translations = {
     footer_copy: "© 2026 Aegis Systems. Всі права захищено.",
 
     chat_greeting: "Вітаю! Я Aegis AI. Чим можу допомогти?",
-    demo_greeting: "Це демо-режим 👋 Спробуйте запитати мене про тарифи, інтеграцію або можливості Aegis — я відповім так само, як відповідав би реальному клієнту."
+    demo_greeting: "Це демо-режим 👋 Спробуйте запитати мене про тарифи, інтеграцію або можливості Aegis — я відповім так само, як відповідав би реальному клієнту.",
+    chip1: "Скільки коштує Pro?",
+    chip1_msg: "Скільки коштує Pro тариф?",
+    chip2: "Як інтегрувати?",
+    chip2_msg: "Як відбувається інтеграція з сайтом?",
+    chat_input_placeholder: "Напишіть повідомлення..."
   },
   en: {
     logo: "AEGIS AI",
@@ -171,8 +176,8 @@ const translations = {
     feature1_desc: "Intelligent slot matching. Aegis analyzes your schedule, proposes convenient times, and securely registers the appointment without human intervention.",
     feature2_title: "Lead Qualification",
     feature2_desc: "No more dead-end chats. The bot naturally weaves questions into the conversation, effortlessly capturing names, contact details, and project specifics.",
-    feature3_title: "Secure Synchronization",
-    feature3_desc: "One-Time Deep Links. Innovative single-use token technology for a seamless and secure transition from web chat directly to the user's Telegram.",
+    feature3_title: "Flexible Configuration",
+    feature3_desc: "Working hours and tone of voice, set right from the admin panel — Aegis replies within your business hours and sounds like your brand.",
     feature4_title: "Instant Service",
     feature4_desc: "Zero wait time. Lightning-fast 0.5-second reaction speed, 24/7. Your clients always receive priority attention.",
 
@@ -194,7 +199,7 @@ const translations = {
     price_starter_f4: "Email lead notifications",
     price_pro_f1: "Website + Telegram Bot integration",
     price_pro_f2: "Unlimited conversations",
-    price_pro_f3: "Chat auto-sync (One-Time Deep Links)",
+    price_pro_f3: "Custom working hours & tone of voice",
     price_pro_f4: "Direct CRM integration & Webhooks",
     price_ent_f1: "Dedicated server instance",
     price_ent_f2: "Custom complex scenarios",
@@ -211,7 +216,7 @@ const translations = {
     testi_1_text: "\"Aegis completely solved our after-hours support. 30% of inquiries hit after midnight. The bot qualifies the lead, takes the number, and logs it into our CRM. In the morning, our reps just call hot leads.\"",
     testi_1_author: "— Alexander, Owner of AutoParts UA",
     testi_1_badge: "Example case · +30% leads at night",
-    testi_2_text: "\"Integration really took 2 minutes. The most impressive part is how the bot transitions the client to Telegram via One-Time Links — zero lost contacts even if the user closes the browser tab.\"",
+    testi_2_text: "\"Integration really took 2 minutes. The most impressive part is how the bot pushes every new lead straight into our CRM via webhook — zero manual work.\"",
     testi_2_author: "— Marina, CEO of BeautyHub",
     testi_2_badge: "Example case · 2-min integration",
     testi_3_text: "\"We used to miss calls after 7 PM — now Aegis answers, books the appointment, and confirms the time on the spot. The front desk just sends a reminder in the morning.\"",
@@ -232,7 +237,12 @@ const translations = {
     footer_copy: "© 2026 Aegis Systems. All rights reserved.",
 
     chat_greeting: "Hi! I'm Aegis AI. How can I help?",
-    demo_greeting: "This is demo mode 👋 Try asking about pricing, integration, or what Aegis can do — I'll answer just like I would for a real client."
+    demo_greeting: "This is demo mode 👋 Try asking about pricing, integration, or what Aegis can do — I'll answer just like I would for a real client.",
+    chip1: "How much is Pro?",
+    chip1_msg: "How much does the Pro plan cost?",
+    chip2: "How to integrate?",
+    chip2_msg: "How does website integration work?",
+    chat_input_placeholder: "Type a message..."
   }
 };
 
@@ -263,6 +273,21 @@ let currentLang = (() => {
 const GLITCH_OUT_MS = 380;
 const GLITCH_OUT_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)'; // fast accelerate — snappy dissolve
 
+// Placeholders and the chat chips' underlying data-text aren't rendered
+// text nodes, so they don't need (or get) the glitch animation below —
+// just swap them immediately, same as the reduced-motion path does for
+// [data-i18n].
+function applyNonTextI18n(lang) {
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (translations[lang][key]) el.placeholder = translations[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-text]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-text');
+    if (translations[lang][key]) el.dataset.text = translations[lang][key];
+  });
+}
+
 function applyLang(lang) {
   currentLang = lang;
   document.documentElement.lang = lang; // a11y + SEO: screen readers and crawlers rely on this
@@ -272,6 +297,7 @@ function applyLang(lang) {
     /* ignore — persistence is a nice-to-have, not required for the page to work */
   }
   const elements = document.querySelectorAll('[data-i18n]');
+  applyNonTextI18n(lang);
 
   if (prefersReducedMotion) {
     elements.forEach((el) => {

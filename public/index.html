@@ -155,8 +155,8 @@
       </div>
       <div class="feature-card glass-panel reveal">
         <div class="feature-icon">🔒</div>
-        <h3 class="feature-title" data-i18n="feature3_title">Безпечна синхронізація</h3>
-        <p class="feature-desc" data-i18n="feature3_desc">One-Time Deep Links. Інноваційна технологія одноразових токенів для безшовного та захищеного перенесення розмови з вебсайту прямо в Telegram клієнта.</p>
+        <h3 class="feature-title" data-i18n="feature3_title">Гнучке налаштування</h3>
+        <p class="feature-desc" data-i18n="feature3_desc">Розклад роботи бота та тон спілкування налаштовуються прямо в адмін-панелі — Aegis відповідає у ваш робочий час і говорить так, як звучить ваш бренд.</p>
       </div>
       <div class="feature-card glass-panel reveal">
         <div class="feature-icon">⚡</div>
@@ -210,7 +210,7 @@
         <ul class="pricing-features">
           <li data-i18n="price_pro_f1">Сайт + інтеграція з Telegram-ботом</li>
           <li data-i18n="price_pro_f2">Необмежені діалоги</li>
-          <li data-i18n="price_pro_f3">Авто-синхронізація (One-Time Deep Links)</li>
+          <li data-i18n="price_pro_f3">Розклад роботи бота та кастомний тон спілкування</li>
           <li data-i18n="price_pro_f4">Пряма CRM-інтеграція та Webhooks</li>
         </ul>
         <button class="pricing-cta pricing-cta--primary chat-opener" data-plan="pro" data-i18n="price_pro_cta">Обрати тариф</button>
@@ -251,7 +251,7 @@
             <span class="testi-badge" data-i18n="testi_2_badge">Приклад кейсу · 2 хв на інтеграцію</span>
           </div>
         </div>
-        <p class="testi-text" data-i18n="testi_2_text">"Інтеграція справді зайняла 2 хвилини. Найбільше вразило те, як бот переводить клієнта в Telegram (One-Time Links) — жодних втрат контактів, навіть якщо людина закрила вкладку браузера."</p>
+        <p class="testi-text" data-i18n="testi_2_text">"Інтеграція справді зайняла 2 хвилини. Найбільше вразило те, як бот сам передає нових лідів у нашу CRM через webhook — жодної ручної роботи."</p>
       </div>
       <div class="testi-card glass-panel reveal">
         <div class="testi-top">
@@ -350,12 +350,12 @@
     <div class="chat-messages" id="chat-messages" aria-live="polite" aria-atomic="false"></div>
 
     <div class="chat-suggestions" id="chat-suggestions">
-      <button class="suggestion-chip" data-text="Скільки коштує Pro тариф?">Скільки коштує Pro?</button>
-      <button class="suggestion-chip" data-text="Як відбувається інтеграція з сайтом?">Як інтегрувати?</button>
+      <button class="suggestion-chip" data-i18n="chip1" data-i18n-text="chip1_msg" data-text="Скільки коштує Pro тариф?">Скільки коштує Pro?</button>
+      <button class="suggestion-chip" data-i18n="chip2" data-i18n-text="chip2_msg" data-text="Як відбувається інтеграція з сайтом?">Як інтегрувати?</button>
     </div>
 
     <footer class="chat-input-area">
-      <textarea id="chat-input" class="chat-input" rows="1" maxlength="500" placeholder="Напишіть повідомлення..."></textarea>
+      <textarea id="chat-input" class="chat-input" rows="1" maxlength="500" data-i18n-placeholder="chat_input_placeholder" placeholder="Напишіть повідомлення..."></textarea>
       <button id="chat-send-btn" class="chat-send-btn" disabled aria-label="Надіслати">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
       </button>
